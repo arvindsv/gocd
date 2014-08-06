@@ -49,16 +49,55 @@ describe Admin::SshKeysController do
       assert_key @ssh_keys[1], "NAME2", "HOSTNAME2", "USERNAME2", "RESOURCES2"
     end
 
-    it 'should not send back the KEY as a part of the response' do
-      expect(@ssh_keys[0].keys.sort).to eq(["name", "hostname", "username", "resources"].sort)
-      expect(@ssh_keys[1].keys.sort).to eq(["name", "hostname", "username", "resources"].sort)
+    it 'should NOT send back the private key info as a part of the response' do
+      assert_no_private_key_info_in @ssh_keys[0]
+      assert_no_private_key_info_in @ssh_keys[1]
+    end
+  end
+
+  describe :create do
+    before :each do
+      @ssh_keys_service = stub_service(:ssh_keys_service)
     end
 
-    def assert_key key, expected_name, expected_hostname, expected_username, expected_resources
-      expect(key["name"]).to eq(expected_name)
-      expect(key["hostname"]).to eq(expected_hostname)
-      expect(key["username"]).to eq(expected_username)
-      expect(key["resources"]).to eq(expected_resources)
+    it 'should validate ssh key before adding' do
+      errors = [ValidationError.new("name", "Is wrong"), ValidationError.new("hostname", "Is also wrong")]
+      @ssh_keys_service.should_receive(:validate).with("NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1") { errors }
+      @ssh_keys_service.should_not_receive(:addKey)
+
+      post :create, {:name => "NAME1", :hostname => "HOSTNAME1", :username => "USERNAME1", :key => "KEY1", :resources => "RESOURCES1"}
+
+      errors = JSON.parse(response.body)
+
+      expect(response.status).to eq(422)
+      expect(errors.size).to eq(2)
+      expect(errors[0]).to eq({"key" => "name", "message" => "Is wrong"})
+      expect(errors[1]).to eq({"key" => "hostname", "message" => "Is also wrong"})
     end
+
+    it 'should add key if validation passes' do
+      new_key = SshKeyMother.key "NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1"
+      @ssh_keys_service.should_receive(:validate).with("NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1") { [] }
+      @ssh_keys_service.should_receive(:addKey).with("NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1") { new_key }
+
+      post :create, {:name => "NAME1", :hostname => "HOSTNAME1", :username => "USERNAME1", :key => "KEY1", :resources => "RESOURCES1"}
+
+      added_key = JSON.parse(response.body)
+
+      expect(response.status).to eq(200)
+      assert_key added_key, "NAME1", "HOSTNAME1", "USERNAME1", "RESOURCES1"
+      assert_no_private_key_info_in added_key
+    end
+  end
+
+  def assert_key key, expected_name, expected_hostname, expected_username, expected_resources
+    expect(key["name"]).to eq(expected_name)
+    expect(key["hostname"]).to eq(expected_hostname)
+    expect(key["username"]).to eq(expected_username)
+    expect(key["resources"]).to eq(expected_resources)
+  end
+
+  def assert_no_private_key_info_in ssh_key
+    expect(ssh_key.keys.sort).to eq(["name", "hostname", "username", "resources"].sort)
   end
 end

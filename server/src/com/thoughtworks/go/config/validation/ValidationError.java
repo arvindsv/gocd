@@ -14,25 +14,22 @@
  * limitations under the License.
  *************************GO-LICENSE-END***********************************/
 
-package com.thoughtworks.go.server.service.config;
+package com.thoughtworks.go.config.validation;
 
-import com.thoughtworks.go.config.SshKey;
-import com.thoughtworks.go.config.validation.ValidationError;
-import org.springframework.stereotype.Service;
+public class ValidationError {
+    private final String key;
+    private final String value;
 
-import java.util.List;
-
-@Service
-public class SshKeysService {
-    public List<SshKey> all() {
-        throw new RuntimeException("Not implemented yet!");
+    public ValidationError(String key, String value) {
+        this.key = key;
+        this.value = value;
     }
 
-    public List<ValidationError> validate(String name, String hostname, String username, String key, String resources) {
-        throw new RuntimeException("Not implemented yet!");
+    public String getKey() {
+        return key;
     }
 
-    public SshKey addKey(String name, String hostname, String username, String key, String resources) {
-        throw new RuntimeException("Not implemented yet!");
+    public String getValue() {
+        return value;
     }
 }

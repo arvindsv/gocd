@@ -101,4 +101,5 @@ module JavaSpecImports
   java_import com.thoughtworks.go.plugin.api.task.TaskView unless defined? TaskView
   java_import com.thoughtworks.go.domain.TaskViewStub unless defined? TaskViewStub
   java_import com.thoughtworks.go.helper.SshKeyMother unless defined? SshKeyMother
+  java_import com.thoughtworks.go.config.validation.ValidationError unless defined? ValidationError
 end

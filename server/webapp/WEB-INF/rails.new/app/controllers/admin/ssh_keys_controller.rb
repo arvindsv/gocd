@@ -18,17 +18,28 @@ module Admin
   class SshKeysController < AdminController
     def index
       all_the_keys = ssh_keys_service.all
-
-      all_keys_as_hash_for_json = all_the_keys.collect do |ssh_key|
-        {
-            :name => ssh_key.name,
-            :hostname => ssh_key.hostname,
-            :username => ssh_key.username,
-            :resources => ssh_key.resources
-        }
-      end
+      all_keys_as_hash_for_json = all_the_keys.collect do |ssh_key| convert_to_hash(ssh_key) end
 
       render :json => all_keys_as_hash_for_json
+    end
+
+    def create
+      errors = ssh_keys_service.validate params[:name], params[:hostname], params[:username], params[:key], params[:resources]
+      render :json => errors.collect {|error| {:key => error.key, :message => error.value}}, :status => 422 and return unless errors.empty?
+
+      added_key = ssh_keys_service.addKey(params[:name], params[:hostname], params[:username], params[:key], params[:resources])
+      render :json => convert_to_hash(added_key)
+    end
+
+    private
+
+    def convert_to_hash(ssh_key)
+      {
+          :name => ssh_key.name,
+          :hostname => ssh_key.hostname,
+          :username => ssh_key.username,
+          :resources => ssh_key.resources
+      }
     end
   end
 end
