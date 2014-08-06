@@ -146,6 +146,10 @@ Go::Application.routes.draw do
   get "admin/package_repositories/:plugin/config/" => "admin/package_repositories#plugin_config", as: :package_repositories_plugin_config
   get "admin/package_repositories/:id/:plugin/config/" => "admin/package_repositories#plugin_config_for_repo", as: :package_repositories_plugin_config_for_repo
 
+  namespace :admin do
+    resources :ssh_keys
+  end
+
   get 'agents/filter_autocomplete/:action' => 'agent_autocomplete#%{action}', constraints: {action: /resource|os|ip|name|status|environment/}, as: :agent_filter_autocomplete
 
   scope 'pipelines' do
