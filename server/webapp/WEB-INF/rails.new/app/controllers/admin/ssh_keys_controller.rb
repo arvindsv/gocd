@@ -17,7 +17,18 @@
 module Admin
   class SshKeysController < AdminController
     def index
-      render :json => {}
+      all_the_keys = ssh_keys_service.all
+
+      all_keys_as_hash_for_json = all_the_keys.collect do |ssh_key|
+        {
+            :name => ssh_key.name,
+            :hostname => ssh_key.hostname,
+            :username => ssh_key.username,
+            :resources => ssh_key.resources
+        }
+      end
+
+      render :json => all_keys_as_hash_for_json
     end
   end
 end

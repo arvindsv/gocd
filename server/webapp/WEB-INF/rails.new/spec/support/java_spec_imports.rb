@@ -100,4 +100,5 @@ module JavaSpecImports
   java_import com.thoughtworks.go.plugins.presentation.PluggableTaskViewModelFactory unless defined? PluggableTaskViewModelFactory
   java_import com.thoughtworks.go.plugin.api.task.TaskView unless defined? TaskView
   java_import com.thoughtworks.go.domain.TaskViewStub unless defined? TaskViewStub
+  java_import com.thoughtworks.go.helper.SshKeyMother unless defined? SshKeyMother
 end
