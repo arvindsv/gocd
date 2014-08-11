@@ -25,7 +25,7 @@ module Admin
 
     def create
       errors = ssh_keys_service.validate params[:name], params[:hostname], params[:username], params[:key], params[:resources]
-      render :json => errors.collect {|error| {:key => error.key, :message => error.value}}, :status => 422 and return unless errors.empty?
+      render :json => {:errors => errors.collect {|error| {:key => error.key, :message => error.value}}}, :status => 422 and return unless errors.empty?
 
       added_key = ssh_keys_service.addKey(params[:name], params[:hostname], params[:username], params[:key], params[:resources])
       render :json => convert_to_hash(added_key)

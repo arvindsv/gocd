@@ -67,12 +67,12 @@ describe Admin::SshKeysController do
 
       post :create, {:name => "NAME1", :hostname => "HOSTNAME1", :username => "USERNAME1", :key => "KEY1", :resources => "RESOURCES1"}
 
-      errors = JSON.parse(response.body)
+      output = JSON.parse(response.body)
 
       expect(response.status).to eq(422)
-      expect(errors.size).to eq(2)
-      expect(errors[0]).to eq({"key" => "name", "message" => "Is wrong"})
-      expect(errors[1]).to eq({"key" => "hostname", "message" => "Is also wrong"})
+      expect(output["errors"].size).to eq(2)
+      expect(output["errors"][0]).to eq({"key" => "name", "message" => "Is wrong"})
+      expect(output["errors"][1]).to eq({"key" => "hostname", "message" => "Is also wrong"})
     end
 
     it 'should add key if validation passes' do
