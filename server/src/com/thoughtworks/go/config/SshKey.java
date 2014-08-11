@@ -17,18 +17,24 @@
 package com.thoughtworks.go.config;
 
 public class SshKey {
+    private final String id;
     private final String name;
     private final String hostname;
     private final String username;
     private final String key;
     private final String resources;
 
-    public SshKey(String name, String hostname, String username, String key, String resources) {
+    public SshKey(String id, String name, String hostname, String username, String key, String resources) {
+        this.id = id;
         this.name = name;
         this.hostname = hostname;
         this.username = username;
         this.key = key;
         this.resources = resources;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getName() {

@@ -35,6 +35,7 @@ module Admin
 
     def convert_to_hash(ssh_key)
       {
+          :id => ssh_key.id,
           :name => ssh_key.name,
           :hostname => ssh_key.hostname,
           :username => ssh_key.username,

@@ -19,7 +19,7 @@ package com.thoughtworks.go.helper;
 import com.thoughtworks.go.config.SshKey;
 
 public class SshKeyMother {
-    public static SshKey key(String name, String hostname, String username, String key, String resources) {
-        return new SshKey(name, hostname, username, key, resources);
+    public static SshKey key(String id, String name, String hostname, String username, String key, String resources) {
+        return new SshKey(id, name, hostname, username, key, resources);
     }
 }

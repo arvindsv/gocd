@@ -24,8 +24,8 @@ describe Admin::SshKeysController do
   end
 
   describe :index do
-    let (:ssh_key1) { SshKeyMother.key "NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1" }
-    let (:ssh_key2) { SshKeyMother.key "NAME2", "HOSTNAME2", "USERNAME2", "KEY2", "RESOURCES2" }
+    let (:ssh_key1) { SshKeyMother.key "1", "NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1" }
+    let (:ssh_key2) { SshKeyMother.key "2", "NAME2", "HOSTNAME2", "USERNAME2", "KEY2", "RESOURCES2" }
 
     before :each do
       ssh_keys_service = stub_service(:ssh_keys_service)
@@ -45,8 +45,8 @@ describe Admin::SshKeysController do
     end
 
     it 'should have all the information' do
-      assert_key @ssh_keys[0], "NAME1", "HOSTNAME1", "USERNAME1", "RESOURCES1"
-      assert_key @ssh_keys[1], "NAME2", "HOSTNAME2", "USERNAME2", "RESOURCES2"
+      assert_key @ssh_keys[0], "1", "NAME1", "HOSTNAME1", "USERNAME1", "RESOURCES1"
+      assert_key @ssh_keys[1], "2", "NAME2", "HOSTNAME2", "USERNAME2", "RESOURCES2"
     end
 
     it 'should NOT send back the private key info as a part of the response' do
@@ -76,7 +76,7 @@ describe Admin::SshKeysController do
     end
 
     it 'should add key if validation passes' do
-      new_key = SshKeyMother.key "NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1"
+      new_key = SshKeyMother.key "1", "NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1"
       @ssh_keys_service.should_receive(:validate).with("NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1") { [] }
       @ssh_keys_service.should_receive(:addKey).with("NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1") { new_key }
 
@@ -85,12 +85,13 @@ describe Admin::SshKeysController do
       added_key = JSON.parse(response.body)
 
       expect(response.status).to eq(200)
-      assert_key added_key, "NAME1", "HOSTNAME1", "USERNAME1", "RESOURCES1"
+      assert_key added_key, "1", "NAME1", "HOSTNAME1", "USERNAME1", "RESOURCES1"
       assert_no_private_key_info_in added_key
     end
   end
 
-  def assert_key key, expected_name, expected_hostname, expected_username, expected_resources
+  def assert_key key, expected_id, expected_name, expected_hostname, expected_username, expected_resources
+    expect(key["id"]).to eq(expected_id)
     expect(key["name"]).to eq(expected_name)
     expect(key["hostname"]).to eq(expected_hostname)
     expect(key["username"]).to eq(expected_username)
@@ -98,6 +99,6 @@ describe Admin::SshKeysController do
   end
 
   def assert_no_private_key_info_in ssh_key
-    expect(ssh_key.keys.sort).to eq(["name", "hostname", "username", "resources"].sort)
+    expect(ssh_key.keys.sort).to eq(["id", "name", "hostname", "username", "resources"].sort)
   end
 end
