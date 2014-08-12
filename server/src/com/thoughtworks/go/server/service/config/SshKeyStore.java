@@ -36,6 +36,7 @@ public class SshKeyStore {
     private SystemEnvironment systemEnvironment;
 
     // TODO: Use GoCache instead.
+    private final Object lockForKey = new Object();
     private List<SshKey> keysCache = null;
 
     @Autowired
@@ -44,61 +45,71 @@ public class SshKeyStore {
     }
 
     public List<SshKey> all() {
-        loadFromCacheIfNeeded();
-        return keysCache;
+        synchronized (lockForKey) {
+            loadFromCacheIfNeeded();
+            return keysCache;
+        }
     }
 
     public SshKey add(String id, String name, String hostname, String username, String key, String resources) {
-        loadFromCacheIfNeeded();
+        synchronized (lockForKey) {
+            loadFromCacheIfNeeded();
 
-        SshKey keyToBeAdded = new SshKey(id, name, hostname, username, key, resources);
-        keysCache.add(keyToBeAdded);
+            SshKey keyToBeAdded = new SshKey(id, name, hostname, username, key, resources);
+            keysCache.add(keyToBeAdded);
 
-        syncStorageWithCache();
-        return keyToBeAdded;
+            syncStorageWithCache();
+            return keyToBeAdded;
+        }
     }
 
     public boolean hasKey(String id) {
-        loadFromCacheIfNeeded();
+        synchronized (lockForKey) {
+            loadFromCacheIfNeeded();
 
-        for (SshKey sshKey : keysCache) {
-            if (sshKey.getId().equals(id)) {
-                return true;
+            for (SshKey sshKey : keysCache) {
+                if (sshKey.getId().equals(id)) {
+                    return true;
+                }
             }
+            return false;
         }
-        return false;
     }
 
     public SshKey deleteKey(String id) {
-        loadFromCacheIfNeeded();
+        synchronized (lockForKey) {
+            loadFromCacheIfNeeded();
 
-        int indexOfKey = findIndexOfKeyWithId(id);
+            int indexOfKey = findIndexOfKeyWithId(id);
 
-        if (indexOfKey < 0) {
-            throw new RuntimeException("Cannot find key with ID: " + id);
+            if (indexOfKey < 0) {
+                throw new RuntimeException("Cannot find key with ID: " + id);
+            }
+
+            SshKey deletedKey = keysCache.remove(indexOfKey);
+            syncStorageWithCache();
+            return deletedKey;
         }
-
-        SshKey deletedKey = keysCache.remove(indexOfKey);
-        syncStorageWithCache();
-        return deletedKey;
     }
 
     public SshKey updateKey(String id, String name, String host, String user, String resources) {
-        loadFromCacheIfNeeded();
+        synchronized (lockForKey) {
+            loadFromCacheIfNeeded();
 
-        int indexOfKey = findIndexOfKeyWithId(id);
+            int indexOfKey = findIndexOfKeyWithId(id);
 
-        if (indexOfKey < 0) {
-            throw new RuntimeException("Cannot find key with ID: " + id);
+            if (indexOfKey < 0) {
+                throw new RuntimeException("Cannot find key with ID: " + id);
+            }
+
+            SshKey updatedKey = keysCache.remove(indexOfKey);
+            SshKey replacementKey = new SshKey(id, name, host, user, updatedKey.getKey(), resources);
+
+            keysCache.add(indexOfKey, replacementKey);
+            syncStorageWithCache();
+
+            return replacementKey;
         }
-
-        SshKey updatedKey = keysCache.remove(indexOfKey);
-        SshKey replacementKey = new SshKey(id, name, host, user, updatedKey.getKey(), resources);
-
-        keysCache.add(indexOfKey, replacementKey);
-        syncStorageWithCache();
-
-        return replacementKey;
     }
 
     private List<SshKey> readFromConfig() throws Exception {
@@ -123,13 +134,9 @@ public class SshKeyStore {
         }
     }
 
-    private void clearCache() {
-        keysCache = null;
-    }
-
     private void syncStorageWithCache() {
         writeToConfig(keysCache);
-        clearCache();
+        keysCache = null;
         loadFromCacheIfNeeded();
     }
 

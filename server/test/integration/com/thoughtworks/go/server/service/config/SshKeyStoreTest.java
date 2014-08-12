@@ -11,9 +11,11 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.*;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -124,5 +126,63 @@ public class SshKeyStoreTest {
         } catch (Exception e) {
             assertThat(e.getMessage(), is("Cannot find key with ID: SOME-NONEXISTENT-ID"));
         }
+    }
+
+    @Test
+    public void shouldBeThreadSafe() throws Exception {
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+
+        Future<Object> adder1 = executorService.submit(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                for (int i = 0; i < 100; i++) {
+                    SshKey key = SshKeyMother.aKey(i);
+                    keyStore.add(key.getId(), key.getName(), key.getHostname(), key.getUsername(), key.getKey(), key.getResources());
+                }
+                return null;
+            }
+        });
+
+        Future<Object> adder2 = executorService.submit(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                for (int i = 101; i < 200; i++) {
+                    SshKey key = SshKeyMother.aKey(i);
+                    keyStore.add(key.getId(), key.getName(), key.getHostname(), key.getUsername(), key.getKey(), key.getResources());
+                }
+                return null;
+            }
+        });
+
+        Future<Object> deletor1 = executorService.submit(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception{
+                for (int i = 0; i < 100; i++) {
+                    SshKey key = SshKeyMother.aKey(i);
+
+                    for (int j = 0; j < 100; j++) {
+                        if (!keyStore.hasKey(key.getId())) {
+                            safeSleep(20);
+                        }
+                    }
+                    keyStore.deleteKey(key.getId());
+                }
+                return null;
+            }
+
+            private void safeSleep(int numberOfMilliseconds) {
+                try {
+                    Thread.sleep(numberOfMilliseconds);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.SECONDS);
+        assertNull(adder1.get());
+        assertNull(adder2.get());
+        assertNull(deletor1.get());
     }
 }
