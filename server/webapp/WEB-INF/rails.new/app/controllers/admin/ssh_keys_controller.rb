@@ -41,6 +41,13 @@ module Admin
       render :json => convert_to_hash(updated_key)
     end
 
+    def destroy
+      render :json => {:errors => [{:key => 'key_not_found', :message => "Cannot find key with ID: #{params[:id]}"}]}, :status => 422 and return unless ssh_keys_service.hasKey(params[:id])
+
+      deleted_key = ssh_keys_service.deleteKey(params[:id])
+      render :json => convert_to_hash(deleted_key)
+    end
+
     private
 
     def convert_to_hash(ssh_key)

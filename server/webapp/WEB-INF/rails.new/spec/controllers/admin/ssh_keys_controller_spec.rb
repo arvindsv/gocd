@@ -145,6 +145,40 @@ describe Admin::SshKeysController do
     end
   end
 
+  describe :delete do
+    before :each do
+      @ssh_keys_service = stub_service(:ssh_keys_service)
+    end
+
+    it 'should fail if ssh key cannot be found' do
+      @ssh_keys_service.should_receive(:hasKey).with("ID1") { false }
+      @ssh_keys_service.should_not_receive(:deleteKey)
+
+      delete :destroy, {:id => "ID1"}
+
+      output = JSON.parse(response.body)
+
+      expect(response.status).to eq(422)
+      expect(output["errors"].size).to eq(1)
+      expect(output["errors"][0]).to eq({"key" => "key_not_found", "message" => "Cannot find key with ID: ID1"})
+    end
+
+    it 'should succeed if ssh key can be found' do
+      deleted_key = SshKeyMother.key "ID1", "NAME1", "HOSTNAME1", "USERNAME1", "KEY1", "RESOURCES1"
+
+      @ssh_keys_service.should_receive(:hasKey).with("ID1") { true }
+      @ssh_keys_service.should_receive(:deleteKey).with("ID1") { deleted_key }
+
+      delete :destroy, {:id => "ID1"}
+
+      output = JSON.parse(response.body)
+
+      expect(response.status).to eq(200)
+      assert_key output, "ID1", "NAME1", "HOSTNAME1", "USERNAME1", "RESOURCES1"
+      assert_no_private_key_info_in output
+    end
+  end
+
   def assert_key key, expected_id, expected_name, expected_hostname, expected_username, expected_resources
     expect(key["id"]).to eq(expected_id)
     expect(key["name"]).to eq(expected_name)

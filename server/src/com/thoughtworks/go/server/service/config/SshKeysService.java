@@ -47,4 +47,8 @@ public class SshKeysService {
     public SshKey updateKey(String id, String name, String hostname, String username, String resources) {
         throw new RuntimeException("Not implemented yet!");
     }
+
+    public SshKey deleteKey(String id) {
+        throw new RuntimeException("Not implemented yet!");
+    }
 }
