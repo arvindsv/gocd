@@ -116,6 +116,13 @@ public class SshKeysServiceTest {
         assertThat(service.validateUpdate("ID1", "NAME1", "HOST1", "USER1", ""), is(empty()));
     }
 
+    @Test
+    public void shouldDelegateToKeyStoreForChecksumOfAllKeys() throws Exception {
+        when(keyStore.checksum()).thenReturn("ABC");
+
+        assertThat(service.checksum(), is("ABC"));
+    }
+
     private ValidationError errorOn(String key, String value) {
         return new ValidationError(key, value);
     }

@@ -13,11 +13,8 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.*;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -154,6 +151,16 @@ public class SshKeyStoreTest {
             }
         });
 
+        Future<Object> checksummer1 = executorService.submit(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                for (int i = 0; i < 10000; i++) {
+                    keyStore.checksum();
+                }
+                return null;
+            }
+        });
+
         Future<Object> deletor1 = executorService.submit(new Callable<Object>() {
             @Override
             public Object call() throws Exception{
@@ -183,6 +190,70 @@ public class SshKeyStoreTest {
         executorService.awaitTermination(5, TimeUnit.SECONDS);
         assertNull(adder1.get());
         assertNull(adder2.get());
+        assertNull(checksummer1.get());
         assertNull(deletor1.get());
+    }
+
+    @Test
+    public void shouldChangeChecksumWhenKeyIsAdded() throws Exception {
+        assertThat(keyStore.checksum(), is(not(nullValue())));
+        String oldChecksum = keyStore.checksum();
+
+        SshKey key = SshKeyMother.aKey(1);
+        keyStore.add(key.getId(), key.getName(), key.getHostname(), key.getUsername(), key.getKey(), key.getResources());
+        assertThat(keyStore.checksum(), is(not(nullValue())));
+        String newChecksum = keyStore.checksum();
+
+        assertThat(newChecksum, is(not(oldChecksum)));
+    }
+
+    @Test
+    public void shouldChangeChecksumWhenKeyIsDeleted() throws Exception {
+        String originalChecksum = keyStore.checksum();
+
+        SshKey key = SshKeyMother.aKey(1);
+        keyStore.add(key.getId(), key.getName(), key.getHostname(), key.getUsername(), key.getKey(), key.getResources());
+        assertThat(keyStore.checksum(), is(not(nullValue())));
+        String oldChecksum = keyStore.checksum();
+
+        keyStore.deleteKey(key.getId());
+        assertThat(keyStore.checksum(), is(not(nullValue())));
+        String newChecksum = keyStore.checksum();
+
+        assertThat(newChecksum, is(not(oldChecksum)));
+        assertThat(originalChecksum, is(newChecksum));
+    }
+
+    @Test
+    public void shouldChangeChecksumWhenKeyIsUpdated() throws Exception {
+        SshKey key = SshKeyMother.aKey(1);
+        keyStore.add(key.getId(), key.getName(), key.getHostname(), key.getUsername(), key.getKey(), key.getResources());
+        assertThat(keyStore.checksum(), is(not(nullValue())));
+        String oldChecksum = keyStore.checksum();
+
+        keyStore.updateKey(key.getId(), "NAME2", "HOST2", "USER2", "RESOURCES2");
+        assertThat(keyStore.checksum(), is(not(nullValue())));
+        String newChecksum = keyStore.checksum();
+
+        assertThat(newChecksum, is(not(oldChecksum)));
+    }
+
+    @Test
+    public void shouldNotChangeChecksumForOperationsOtherThanAddUpdateAndDeleteKey() throws Exception {
+        SshKey key = SshKeyMother.aKey(1);
+        keyStore.add(key.getId(), key.getName(), key.getHostname(), key.getUsername(), key.getKey(), key.getResources());
+        String oldChecksum = keyStore.checksum();
+
+        keyStore.all();
+        assertThat(keyStore.checksum(), is(oldChecksum));
+
+        keyStore.checksum();
+        assertThat(keyStore.checksum(), is(oldChecksum));
+
+        keyStore.hasKey(key.getId());
+        assertThat(keyStore.checksum(), is(oldChecksum));
+
+        keyStore.hasKey("SOME-KEY");
+        assertThat(keyStore.checksum(), is(oldChecksum));
     }
 }

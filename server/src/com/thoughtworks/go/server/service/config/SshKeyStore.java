@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.go.config.SshKey;
 import com.thoughtworks.go.util.SystemEnvironment;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -38,6 +39,7 @@ public class SshKeyStore {
     // TODO: Use GoCache instead.
     private final Object lockForKey = new Object();
     private List<SshKey> keysCache = null;
+    private String cachedChecksum = null;
 
     @Autowired
     public SshKeyStore(SystemEnvironment systemEnvironment) {
@@ -112,6 +114,21 @@ public class SshKeyStore {
         }
     }
 
+    public String checksum() {
+        if (cachedChecksum == null) {
+            synchronized (lockForKey) {
+                loadFromCacheIfNeeded();
+                try {
+                    cachedChecksum = DigestUtils.sha256Hex(FileUtils.readFileToString(sshKeysFile()));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        return cachedChecksum;
+    }
+
     private List<SshKey> readFromConfig() throws Exception {
         return gson.fromJson(new FileReader(sshKeysFile()), new TypeToken<List<SshKey>>() { }.getType());
     }
@@ -135,8 +152,10 @@ public class SshKeyStore {
     }
 
     private void syncStorageWithCache() {
-        writeToConfig(keysCache);
+        List<SshKey> keysCacheToWriteToStorage = keysCache;
         keysCache = null;
+        cachedChecksum = null;
+        writeToConfig(keysCacheToWriteToStorage);
         loadFromCacheIfNeeded();
     }
 

@@ -77,4 +77,8 @@ public class SshKeysService {
             currentErrors.add(new ValidationError(keyName, "Should not be empty"));
         }
     }
+
+    public String checksum() {
+        return keyStore.checksum();
+    }
 }
