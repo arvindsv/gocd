@@ -16,6 +16,9 @@
 
 package com.thoughtworks.go.config;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 public class SshKey {
     private final String id;
     private final String name;
@@ -55,5 +58,15 @@ public class SshKey {
 
     public String getResources() {
         return resources;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return EqualsBuilder.reflectionEquals(this, o);
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodeBuilder.reflectionHashCode(this);
     }
 }

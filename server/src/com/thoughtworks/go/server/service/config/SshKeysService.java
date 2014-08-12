@@ -18,37 +18,63 @@ package com.thoughtworks.go.server.service.config;
 
 import com.thoughtworks.go.config.SshKey;
 import com.thoughtworks.go.config.validation.ValidationError;
+import com.thoughtworks.go.server.util.UuidGenerator;
+import com.thoughtworks.go.util.StringUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class SshKeysService {
+    private UuidGenerator uuidGenerator;
+    private SshKeyStore keyStore;
+
+    @Autowired
+    public SshKeysService(UuidGenerator uuidGenerator, SshKeyStore keyStore) {
+        this.uuidGenerator = uuidGenerator;
+        this.keyStore = keyStore;
+    }
+
     public List<SshKey> all() {
-        throw new RuntimeException("Not implemented yet!");
+        return keyStore.all();
     }
 
     public List<ValidationError> validate(String name, String hostname, String username, String key, String resources) {
-        throw new RuntimeException("Not implemented yet!");
+        ArrayList<ValidationError> errors = new ArrayList<ValidationError>();
+        ensureNotEmpty(errors, "name", name);
+        ensureNotEmpty(errors, "hostname", hostname);
+        ensureNotEmpty(errors, "key", key);
+        return errors;
     }
 
     public SshKey addKey(String name, String hostname, String username, String key, String resources) {
-        throw new RuntimeException("Not implemented yet!");
+        return keyStore.add(new SshKey(uuidGenerator.randomUuid(), name, hostname, username, key, resources));
     }
 
     public boolean hasKey(String id) {
-        throw new RuntimeException("Not implemented yet!");
+        return keyStore.hasKey(id);
     }
 
     public List<ValidationError> validateUpdate(String id, String name, String hostname, String username, String resources) {
-        throw new RuntimeException("Not implemented yet!");
+        ArrayList<ValidationError> errors = new ArrayList<ValidationError>();
+        ensureNotEmpty(errors, "name", name);
+        ensureNotEmpty(errors, "hostname", hostname);
+        return errors;
     }
 
     public SshKey updateKey(String id, String name, String hostname, String username, String resources) {
-        throw new RuntimeException("Not implemented yet!");
+        return keyStore.updateKey(id, name, hostname, username, resources);
     }
 
     public SshKey deleteKey(String id) {
-        throw new RuntimeException("Not implemented yet!");
+        return keyStore.deleteKey(id);
+    }
+
+    private void ensureNotEmpty(List<ValidationError> currentErrors, String keyName, String keyValue) {
+        if (StringUtil.isBlank(keyValue)) {
+            currentErrors.add(new ValidationError(keyName, "Should not be empty"));
+        }
     }
 }
