@@ -31,6 +31,16 @@ module Admin
       render :json => convert_to_hash(added_key)
     end
 
+    def update
+      render :json => {:errors => [{:key => 'key_not_found', :message => "Cannot find key with ID: #{params[:id]}"}]}, :status => 422 and return unless ssh_keys_service.hasKey(params[:id])
+
+      errors = ssh_keys_service.validateUpdate(params[:id], params[:name], params[:hostname], params[:username], params[:resources])
+      render :json => {:errors => errors.collect {|error| {:key => error.key, :message => error.value}}}, :status => 422 and return unless errors.empty?
+
+      updated_key = ssh_keys_service.updateKey(params[:id], params[:name], params[:hostname], params[:username], params[:resources])
+      render :json => convert_to_hash(updated_key)
+    end
+
     private
 
     def convert_to_hash(ssh_key)

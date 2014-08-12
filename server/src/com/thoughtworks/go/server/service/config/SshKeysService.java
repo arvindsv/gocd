@@ -35,4 +35,16 @@ public class SshKeysService {
     public SshKey addKey(String name, String hostname, String username, String key, String resources) {
         throw new RuntimeException("Not implemented yet!");
     }
+
+    public boolean hasKey(String id) {
+        throw new RuntimeException("Not implemented yet!");
+    }
+
+    public List<ValidationError> validateUpdate(String id, String name, String hostname, String username, String resources) {
+        throw new RuntimeException("Not implemented yet!");
+    }
+
+    public SshKey updateKey(String id, String name, String hostname, String username, String resources) {
+        throw new RuntimeException("Not implemented yet!");
+    }
 }

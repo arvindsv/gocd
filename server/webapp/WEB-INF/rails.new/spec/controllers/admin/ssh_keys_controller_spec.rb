@@ -18,8 +18,10 @@ require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
 describe Admin::SshKeysController do
   describe :route do
-    it "should resolve index" do
+    it "should resolve" do
       expect({:get => "/admin/ssh_keys"}).to route_to(:controller => "admin/ssh_keys", :action => "index")
+      expect({:post => "/admin/ssh_keys"}).to route_to(:controller => "admin/ssh_keys", :action => "create")
+      expect({:put => "/admin/ssh_keys/ID1"}).to route_to(:controller => "admin/ssh_keys", :action => "update", :id => "ID1")
     end
   end
 
@@ -87,6 +89,59 @@ describe Admin::SshKeysController do
       expect(response.status).to eq(200)
       assert_key added_key, "1", "NAME1", "HOSTNAME1", "USERNAME1", "RESOURCES1"
       assert_no_private_key_info_in added_key
+    end
+  end
+
+  describe :update do
+    before :each do
+      @ssh_keys_service = stub_service(:ssh_keys_service)
+    end
+
+    it 'should fail if ssh key cannot be found' do
+      @ssh_keys_service.should_receive(:hasKey).with("ID1") { false }
+      @ssh_keys_service.should_not_receive(:validateUpdate)
+      @ssh_keys_service.should_not_receive(:updateKey)
+
+      put :update, {:id => "ID1", :name => "NAME2", :hostname => "HOSTNAME2", :username => "USERNAME2", :resources => "RESOURCES2"}
+
+      output = JSON.parse(response.body)
+
+      expect(response.status).to eq(422)
+      expect(output["errors"].size).to eq(1)
+      expect(output["errors"][0]).to eq({"key" => "key_not_found", "message" => "Cannot find key with ID: ID1"})
+    end
+
+    it 'should fail if ssh key can be found, but data is invalid' do
+      errors = [ValidationError.new("name", "Is wrong"), ValidationError.new("hostname", "Is also wrong")]
+
+      @ssh_keys_service.should_receive(:hasKey).with("ID1") { true }
+      @ssh_keys_service.should_receive(:validateUpdate).with("ID1", "NAME2", "HOSTNAME2", "USERNAME2", "RESOURCES2") { errors }
+      @ssh_keys_service.should_not_receive(:updateKey)
+
+      put :update, {:id => "ID1", :name => "NAME2", :hostname => "HOSTNAME2", :username => "USERNAME2", :resources => "RESOURCES2"}
+
+      output = JSON.parse(response.body)
+
+      expect(response.status).to eq(422)
+      expect(output["errors"].size).to eq(2)
+      expect(output["errors"][0]).to eq({'key' => 'name', 'message' => 'Is wrong'})
+      expect(output["errors"][1]).to eq({'key' => 'hostname', 'message' => 'Is also wrong'})
+    end
+
+    it 'should succeed if ssh key can be found, and data is valid' do
+      updated_key = SshKeyMother.key "ID1", "NAME2", "HOSTNAME2", "USERNAME2", "KEY2", "RESOURCES2"
+
+      @ssh_keys_service.should_receive(:hasKey).with("ID1") { true }
+      @ssh_keys_service.should_receive(:validateUpdate).with("ID1", "NAME2", "HOSTNAME2", "USERNAME2", "RESOURCES2") { [] }
+      @ssh_keys_service.should_receive(:updateKey).with("ID1", "NAME2", "HOSTNAME2", "USERNAME2", "RESOURCES2") { updated_key }
+
+      put :update, {:id => "ID1", :name => "NAME2", :hostname => "HOSTNAME2", :username => "USERNAME2", :resources => "RESOURCES2"}
+
+      output = JSON.parse(response.body)
+
+      expect(response.status).to eq(200)
+      assert_key output, "ID1", "NAME2", "HOSTNAME2", "USERNAME2", "RESOURCES2"
+      assert_no_private_key_info_in output
     end
   end
 
