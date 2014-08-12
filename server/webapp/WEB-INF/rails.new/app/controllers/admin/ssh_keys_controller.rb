@@ -16,6 +16,9 @@
 
 module Admin
   class SshKeysController < AdminController
+    skip_before_action :verify_authenticity_token
+    layout false
+
     def index
       all_the_keys = ssh_keys_service.all
       all_keys_as_hash_for_json = all_the_keys.collect do |ssh_key| convert_to_hash(ssh_key) end
