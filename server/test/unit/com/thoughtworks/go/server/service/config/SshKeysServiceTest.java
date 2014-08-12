@@ -33,7 +33,7 @@ public class SshKeysServiceTest {
         SshKey expectedKeyToBeAdded = SshKeyMother.key("SOME-ID-1", "NAME1", "HOST1", "USER1", "KEY1", "RESOURCES1");
 
         when(uuidGenerator.randomUuid()).thenReturn("SOME-ID-1");
-        when(keyStore.add(expectedKeyToBeAdded)).thenReturn(expectedKeyToBeAdded);
+        when(keyStore.add("SOME-ID-1", "NAME1", "HOST1", "USER1", "KEY1", "RESOURCES1")).thenReturn(expectedKeyToBeAdded);
 
         SshKey newKey = service.addKey("NAME1", "HOST1", "USER1", "KEY1", "RESOURCES1");
 
@@ -118,14 +118,5 @@ public class SshKeysServiceTest {
 
     private ValidationError errorOn(String key, String value) {
         return new ValidationError(key, value);
-    }
-
-    private void assertKey(SshKey actualKey, String id, String name, String host, String user, String key, String resources) {
-        assertThat(actualKey.getId(), is(id));
-        assertThat(actualKey.getName(), is(name));
-        assertThat(actualKey.getHostname(), is(host));
-        assertThat(actualKey.getUsername(), is(user));
-        assertThat(actualKey.getKey(), is(key));
-        assertThat(actualKey.getResources(), is(resources));
     }
 }

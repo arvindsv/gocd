@@ -50,7 +50,7 @@ public class SshKeysService {
     }
 
     public SshKey addKey(String name, String hostname, String username, String key, String resources) {
-        return keyStore.add(new SshKey(uuidGenerator.randomUuid(), name, hostname, username, key, resources));
+        return keyStore.add(uuidGenerator.randomUuid(), name, hostname, username, key, resources);
     }
 
     public boolean hasKey(String id) {

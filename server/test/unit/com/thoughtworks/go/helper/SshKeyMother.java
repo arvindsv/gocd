@@ -22,4 +22,8 @@ public class SshKeyMother {
     public static SshKey key(String id, String name, String hostname, String username, String key, String resources) {
         return new SshKey(id, name, hostname, username, key, resources);
     }
+
+    public static SshKey aKey(int id) {
+        return key("ID" + id, "NAME" + id, "HOSTNAME" + id, "USERNAME" + id, "KEY" + id, "RESOURCES" + id);
+    }
 }

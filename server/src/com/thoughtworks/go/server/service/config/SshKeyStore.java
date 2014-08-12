@@ -16,30 +16,138 @@
 
 package com.thoughtworks.go.server.service.config;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.go.config.SshKey;
+import com.thoughtworks.go.util.SystemEnvironment;
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 
 @Component
 public class SshKeyStore {
-    public List<SshKey> all() {
-        return null;
+    public static final String SSH_KEYS_FILE = "go.ssh.keys.json";
+    private final Gson gson = new Gson();
+    private SystemEnvironment systemEnvironment;
+
+    // TODO: Use GoCache instead.
+    private List<SshKey> keysCache = null;
+
+    @Autowired
+    public SshKeyStore(SystemEnvironment systemEnvironment) {
+        this.systemEnvironment = systemEnvironment;
     }
 
-    public SshKey add(SshKey key) {
-        return null;
+    public List<SshKey> all() {
+        loadFromCacheIfNeeded();
+        return keysCache;
+    }
+
+    public SshKey add(String id, String name, String hostname, String username, String key, String resources) {
+        loadFromCacheIfNeeded();
+
+        SshKey keyToBeAdded = new SshKey(id, name, hostname, username, key, resources);
+        keysCache.add(keyToBeAdded);
+
+        syncStorageWithCache();
+        return keyToBeAdded;
     }
 
     public boolean hasKey(String id) {
+        loadFromCacheIfNeeded();
+
+        for (SshKey sshKey : keysCache) {
+            if (sshKey.getId().equals(id)) {
+                return true;
+            }
+        }
         return false;
     }
 
     public SshKey deleteKey(String id) {
-        return null;
+        loadFromCacheIfNeeded();
+
+        int indexOfKey = findIndexOfKeyWithId(id);
+
+        if (indexOfKey < 0) {
+            throw new RuntimeException("Cannot find key with ID: " + id);
+        }
+
+        SshKey deletedKey = keysCache.remove(indexOfKey);
+        syncStorageWithCache();
+        return deletedKey;
     }
 
     public SshKey updateKey(String id, String name, String host, String user, String resources) {
-        return null;
+        loadFromCacheIfNeeded();
+
+        int indexOfKey = findIndexOfKeyWithId(id);
+
+        if (indexOfKey < 0) {
+            throw new RuntimeException("Cannot find key with ID: " + id);
+        }
+
+        SshKey updatedKey = keysCache.remove(indexOfKey);
+        SshKey replacementKey = new SshKey(id, name, host, user, updatedKey.getKey(), resources);
+
+        keysCache.add(indexOfKey, replacementKey);
+        syncStorageWithCache();
+
+        return replacementKey;
+    }
+
+    private List<SshKey> readFromConfig() throws Exception {
+        return gson.fromJson(new FileReader(sshKeysFile()), new TypeToken<List<SshKey>>() { }.getType());
+    }
+
+    private void writeToConfig(List<SshKey> keys) {
+        try {
+            FileUtils.writeStringToFile(sshKeysFile(), gson.toJson(keys));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void loadFromCacheIfNeeded() {
+        if (keysCache == null) {
+            try {
+                keysCache = readFromConfig();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void clearCache() {
+        keysCache = null;
+    }
+
+    private void syncStorageWithCache() {
+        writeToConfig(keysCache);
+        clearCache();
+        loadFromCacheIfNeeded();
+    }
+
+    private File sshKeysFile() throws IOException {
+        File sshKeysFile = new File(systemEnvironment.getConfigDir(), SSH_KEYS_FILE);
+        if (!sshKeysFile.exists()) {
+            FileUtils.writeStringToFile(sshKeysFile, "[]");
+        }
+        return sshKeysFile;
+    }
+
+    private int findIndexOfKeyWithId(String id) {
+        int indexOfKey = -1;
+        for (int i = 0; i < keysCache.size(); i++) {
+            if (keysCache.get(i).getId().equals(id)) {
+                indexOfKey = i;
+            }
+        }
+        return indexOfKey;
     }
 }
