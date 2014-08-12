@@ -16,6 +16,8 @@
 
 package com.thoughtworks.go.agent;
 
+import com.thoughtworks.go.agent.instruction.AgentInstructionRouter;
+import com.thoughtworks.go.agent.instruction.CancelInstructionHandler;
 import com.thoughtworks.go.agent.service.AgentUpgradeService;
 import com.thoughtworks.go.agent.service.SslInfrastructureService;
 import com.thoughtworks.go.config.AgentRegistry;
@@ -56,16 +58,17 @@ public class AgentController {
     private final String hostName;
     private final String ipAddress;
     private AgentInstruction instruction = new AgentInstruction(false);
-    private JobRunner runner;
+    private CancelInstructionHandler cancelInstructionHandler = new CancelInstructionHandler();
     private AgentRuntimeInfo agentRuntimeInfo;
     private SubprocessLogger subprocessLogger;
     private final SystemEnvironment systemEnvironment;
     private AgentUpgradeService agentUpgradeService;
+    private AgentInstructionRouter agentInstructionRouter;
 
     @Autowired
     public AgentController(BuildRepositoryRemote server, GoArtifactsManipulator manipulator, SslInfrastructureService sslInfrastructureService, AgentRegistry agentRegistry,
                            AgentUpgradeService agentUpgradeService, SubprocessLogger subprocessLogger, SystemEnvironment systemEnvironment,
-                           PluginManager pluginManager) {
+                           AgentInstructionRouter agentInstructionRouter, PluginManager pluginManager) {
         this.agentUpgradeService = agentUpgradeService;
         ipAddress = SystemUtil.getFirstLocalNonLoopbackIpAddress();
         hostName = SystemUtil.getLocalhostNameOrRandomNameIfNotFound();
@@ -75,6 +78,10 @@ public class AgentController {
         this.agentRegistry = agentRegistry;
         this.subprocessLogger = subprocessLogger;
         this.systemEnvironment = systemEnvironment;
+
+        this.agentInstructionRouter = agentInstructionRouter;
+        this.agentInstructionRouter.addHandler(cancelInstructionHandler);
+
         PluginManagerReference.reference().setPluginManager(pluginManager);
     }
 
@@ -173,7 +180,8 @@ public class AgentController {
                     LOG.debug(String.format("[Agent Loop] Got work from server: [%s]", work.description()));
                 }
             }
-            runner = new JobRunner();
+            JobRunner runner = new JobRunner();
+            cancelInstructionHandler.setRunner(runner);
             runner.run(work, agentIdentifier, server, manipulator, agentRuntimeInfo);
         } catch (UnregisteredAgentException e) {
             LOG.warn(String.format("[Agent Loop] Invalid agent certificate with fingerprint %s. Registering with server on next iteration.", e.getUuid()));
@@ -184,9 +192,7 @@ public class AgentController {
     }
 
     public void executeAgentInstruction() {
-        if (runner != null) {
-            runner.handleInstruction(instruction, agentRuntimeInfo);
-        }
+        agentInstructionRouter.routeInstruction(instruction, agentRuntimeInfo);
     }
 
     boolean isCausedBySecurity(Throwable e) {

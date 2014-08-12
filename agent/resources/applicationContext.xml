@@ -58,6 +58,7 @@
     <bean class="com.thoughtworks.go.agent.service.SslInfrastructureService"/>
     <bean class="com.thoughtworks.go.agent.service.AgentUpgradeService"/>
     <bean class="com.thoughtworks.go.config.DefaultAgentRegistry" />
+    <bean class="com.thoughtworks.go.agent.instruction.AgentInstructionRouter"/>
 
     <bean id="subprocessLogger" class="com.thoughtworks.go.util.SubprocessLogger"/>
     <bean id="agentController" class="com.thoughtworks.go.agent.AgentController"/>
