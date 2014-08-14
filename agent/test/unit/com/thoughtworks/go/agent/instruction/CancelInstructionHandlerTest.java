@@ -3,6 +3,7 @@ package com.thoughtworks.go.agent.instruction;
 import com.thoughtworks.go.agent.JobRunner;
 import com.thoughtworks.go.remote.AgentIdentifier;
 import com.thoughtworks.go.remote.AgentInstruction;
+import com.thoughtworks.go.remote.AgentInstructionTypes;
 import com.thoughtworks.go.server.service.AgentRuntimeInfo;
 import org.junit.Test;
 
@@ -15,8 +16,8 @@ public class CancelInstructionHandlerTest {
     @Test
     public void shouldSayThatItCanHandleCancelJobInstruction() throws Exception {
         AgentRuntimeInfo runtimeInfo = AgentRuntimeInfo.fromAgent(new AgentIdentifier("randomhost.test", "127.0.0.1", "some-uuid-1"));
-        AgentInstruction notACancelInstruction = new AgentInstruction(false);
-        AgentInstruction aCancelInstruction = new AgentInstruction(true);
+        AgentInstruction notACancelInstruction = new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false");
+        AgentInstruction aCancelInstruction = new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "true");
 
         CancelInstructionHandler handler = new CancelInstructionHandler();
         assertThat(handler.canHandle(notACancelInstruction, runtimeInfo), is(false));
@@ -26,7 +27,7 @@ public class CancelInstructionHandlerTest {
     @Test
     public void shouldNotFailWhenTryingToHandleInstructionWithRunnerNotSet() throws Exception {
         AgentRuntimeInfo runtimeInfo = AgentRuntimeInfo.fromAgent(new AgentIdentifier("randomhost.test", "127.0.0.1", "some-uuid-1"));
-        AgentInstruction aCancelInstruction = new AgentInstruction(true);
+        AgentInstruction aCancelInstruction = new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "true");
 
         CancelInstructionHandler handler = new CancelInstructionHandler();
         handler.handleInstruction(aCancelInstruction, runtimeInfo); // No exception.
@@ -37,7 +38,7 @@ public class CancelInstructionHandlerTest {
         JobRunner runner = mock(JobRunner.class);
 
         AgentRuntimeInfo runtimeInfo = AgentRuntimeInfo.fromAgent(new AgentIdentifier("randomhost.test", "127.0.0.1", "some-uuid-1"));
-        AgentInstruction aCancelInstruction = new AgentInstruction(true);
+        AgentInstruction aCancelInstruction = new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "true");
 
         CancelInstructionHandler handler = new CancelInstructionHandler();
         handler.setRunner(runner);

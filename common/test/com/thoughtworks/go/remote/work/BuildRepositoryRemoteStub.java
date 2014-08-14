@@ -16,16 +16,17 @@
 
 package com.thoughtworks.go.remote.work;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.thoughtworks.go.domain.JobIdentifier;
 import com.thoughtworks.go.domain.JobResult;
 import com.thoughtworks.go.domain.JobState;
 import com.thoughtworks.go.remote.AgentIdentifier;
 import com.thoughtworks.go.remote.AgentInstruction;
+import com.thoughtworks.go.remote.AgentInstructionTypes;
 import com.thoughtworks.go.remote.BuildRepositoryRemote;
 import com.thoughtworks.go.server.service.AgentRuntimeInfo;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BuildRepositoryRemoteStub implements BuildRepositoryRemote {
     public final List<JobState> states = new ArrayList<JobState>();
@@ -41,7 +42,7 @@ public class BuildRepositoryRemoteStub implements BuildRepositoryRemote {
     }
 
     public AgentInstruction ping(AgentRuntimeInfo info) {
-        return new AgentInstruction(false);
+        return new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false");
     }
 
     public Work getWork(AgentRuntimeInfo runtimeInfo) {

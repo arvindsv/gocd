@@ -16,37 +16,23 @@
 
 package com.thoughtworks.go.agent;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.googlecode.junit.ext.JunitExtRunner;
 import com.googlecode.junit.ext.RunIf;
-import com.thoughtworks.go.config.ArtifactPlans;
-import com.thoughtworks.go.config.CaseInsensitiveString;
-import com.thoughtworks.go.config.CruiseConfig;
-import com.thoughtworks.go.config.ExecTask;
-import com.thoughtworks.go.config.JobConfig;
-import com.thoughtworks.go.config.JobConfigs;
-import com.thoughtworks.go.config.PipelineConfig;
-import com.thoughtworks.go.config.PipelineConfigs;
-import com.thoughtworks.go.config.Resources;
-import com.thoughtworks.go.config.StageConfig;
-import com.thoughtworks.go.config.Tasks;
+import com.thoughtworks.go.config.*;
 import com.thoughtworks.go.config.materials.MaterialConfigs;
-import com.thoughtworks.go.domain.builder.Builder;
-import com.thoughtworks.go.domain.DefaultSchedulingContext;
-import com.thoughtworks.go.domain.JobIdentifier;
-import com.thoughtworks.go.domain.JobPlan;
-import com.thoughtworks.go.domain.JobResult;
-import com.thoughtworks.go.domain.Property;
+import com.thoughtworks.go.domain.*;
 import com.thoughtworks.go.domain.buildcause.BuildCause;
+import com.thoughtworks.go.domain.builder.Builder;
 import com.thoughtworks.go.helper.BuilderMother;
 import com.thoughtworks.go.helper.JobInstanceMother;
 import com.thoughtworks.go.junitext.EnhancedOSChecker;
 import com.thoughtworks.go.remote.AgentIdentifier;
 import com.thoughtworks.go.remote.AgentInstruction;
-import com.thoughtworks.go.remote.work.*;
+import com.thoughtworks.go.remote.AgentInstructionTypes;
+import com.thoughtworks.go.remote.work.BuildAssignment;
+import com.thoughtworks.go.remote.work.BuildRepositoryRemoteStub;
+import com.thoughtworks.go.remote.work.BuildWork;
+import com.thoughtworks.go.remote.work.GoArtifactsManipulatorStub;
 import com.thoughtworks.go.server.service.AgentRuntimeInfo;
 import com.thoughtworks.go.server.service.UpstreamPipelineResolver;
 import com.thoughtworks.go.util.GoConstants;
@@ -58,6 +44,10 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.thoughtworks.go.junitext.EnhancedOSChecker.DO_NOT_RUN_ON;
 import static com.thoughtworks.go.junitext.EnhancedOSChecker.WINDOWS;
@@ -170,24 +160,24 @@ public class JobRunnerTest {
     @Test
     public void shouldDoNothingWhenJobIsNotCancelled() throws CruiseControlException {
         runner.setWork(work);
-        runner.handleInstruction(new AgentInstruction(false), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
+        runner.handleInstruction(new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false"), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
         assertThat(work.getCallCount(), is(0));
     }
 
     @Test
     public void shouldCancelOncePerJob() throws CruiseControlException {
         runner.setWork(work);
-        runner.handleInstruction(new AgentInstruction(true), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
+        runner.handleInstruction(new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "true"), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
         assertThat(work.getCallCount(), is(1));
 
-        runner.handleInstruction(new AgentInstruction(true), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
+        runner.handleInstruction(new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "true"), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
         assertThat(work.getCallCount(), is(1));
     }
 
     @Test
     public void shoudReturnTrueOnGetJobIsCancelledWhenJobIsCancelled() {
         assertThat(runner.isJobCancelled(), is(false));
-        runner.handleInstruction(new AgentInstruction(true), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
+        runner.handleInstruction(new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "true"), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
         assertThat(runner.isJobCancelled(), is(true));
     }
 
@@ -213,7 +203,7 @@ public class JobRunnerTest {
         });
         Thread cancel = new Thread(new Runnable() {
             public void run() {
-                jobRunner.handleInstruction(new AgentInstruction(true), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
+                jobRunner.handleInstruction(new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "true"), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
             }
         });
 
@@ -261,7 +251,7 @@ public class JobRunnerTest {
         });
         Thread cancel = new Thread(new Runnable() {
             public void run() {
-                jobRunner.handleInstruction(new AgentInstruction(true), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
+                jobRunner.handleInstruction(new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "true"), AgentRuntimeInfo.fromAgent(agentIdentifier, "cookie", null));
             }
         });
 

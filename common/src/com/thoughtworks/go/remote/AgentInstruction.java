@@ -19,34 +19,39 @@ package com.thoughtworks.go.remote;
 import java.io.Serializable;
 
 public class AgentInstruction implements Serializable {
-    private final boolean shouldCancelJob;
+    private final String type;
+    private final String data;
 
-    public AgentInstruction(boolean shouldCancelJob) {
-        this.shouldCancelJob = shouldCancelJob;
+    public AgentInstruction(String type, String data) {
+        this.type = type;
+        this.data = data;
     }
 
+    @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         AgentInstruction that = (AgentInstruction) o;
 
-        if (shouldCancelJob != that.shouldCancelJob) {
-            return false;
-        }
+        if (data != null ? !data.equals(that.data) : that.data != null) return false;
+        if (type != null ? !type.equals(that.type) : that.type != null) return false;
 
         return true;
     }
 
+    @Override
     public int hashCode() {
-        return (shouldCancelJob ? 1 : 0);
+        int result = type != null ? type.hashCode() : 0;
+        result = 31 * result + (data != null ? data.hashCode() : 0);
+        return result;
     }
 
-    public boolean isShouldCancelJob() {
-        return shouldCancelJob;
+    public String type() {
+        return type;
+    }
+
+    public String data() {
+        return data;
     }
 }

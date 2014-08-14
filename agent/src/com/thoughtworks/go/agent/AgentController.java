@@ -27,6 +27,7 @@ import com.thoughtworks.go.plugin.infra.PluginManagerReference;
 import com.thoughtworks.go.publishers.GoArtifactsManipulator;
 import com.thoughtworks.go.remote.AgentIdentifier;
 import com.thoughtworks.go.remote.AgentInstruction;
+import com.thoughtworks.go.remote.AgentInstructionTypes;
 import com.thoughtworks.go.remote.BuildRepositoryRemote;
 import com.thoughtworks.go.remote.work.NoWork;
 import com.thoughtworks.go.remote.work.Work;
@@ -57,7 +58,7 @@ public class AgentController {
 
     private final String hostName;
     private final String ipAddress;
-    private AgentInstruction instruction = new AgentInstruction(false);
+    private AgentInstruction instruction = new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false");
     private CancelInstructionHandler cancelInstructionHandler = new CancelInstructionHandler();
     private AgentRuntimeInfo agentRuntimeInfo;
     private SubprocessLogger subprocessLogger;

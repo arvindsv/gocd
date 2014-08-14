@@ -18,6 +18,7 @@ package com.thoughtworks.go.agent.instruction;
 
 import com.thoughtworks.go.agent.JobRunner;
 import com.thoughtworks.go.remote.AgentInstruction;
+import com.thoughtworks.go.remote.AgentInstructionTypes;
 import com.thoughtworks.go.server.service.AgentRuntimeInfo;
 
 public class CancelInstructionHandler implements AgentInstructionHandler {
@@ -36,6 +37,6 @@ public class CancelInstructionHandler implements AgentInstructionHandler {
 
     @Override
     public boolean canHandle(AgentInstruction instruction, AgentRuntimeInfo agentRuntimeInfo) {
-        return instruction.isShouldCancelJob();
+        return AgentInstructionTypes.TYPE_CANCEL_JOB.equals(instruction.type());
     }
 }

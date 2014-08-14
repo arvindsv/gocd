@@ -16,20 +16,20 @@
 
 package com.thoughtworks.go.remote;
 
-import static java.lang.String.format;
-
 import com.thoughtworks.go.domain.JobIdentifier;
 import com.thoughtworks.go.domain.JobResult;
 import com.thoughtworks.go.domain.JobState;
-import com.thoughtworks.go.server.service.AgentRuntimeInfo;
-import com.thoughtworks.go.server.service.AgentService;
-import com.thoughtworks.go.server.service.BuildRepositoryService;
-import com.thoughtworks.go.server.service.AgentWithDuplicateUUIDException;
 import com.thoughtworks.go.server.messaging.JobStatusMessage;
 import com.thoughtworks.go.server.messaging.JobStatusTopic;
+import com.thoughtworks.go.server.service.AgentRuntimeInfo;
+import com.thoughtworks.go.server.service.AgentService;
+import com.thoughtworks.go.server.service.AgentWithDuplicateUUIDException;
+import com.thoughtworks.go.server.service.BuildRepositoryService;
 import org.apache.log4j.Logger;
-import org.springframework.remoting.RemoteAccessException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.remoting.RemoteAccessException;
+
+import static java.lang.String.format;
 
 public class BuildRepositoryRemoteImpl {
     private static final Logger LOGGER = Logger.getLogger(BuildRepositoryRemoteImpl.class);
@@ -51,7 +51,8 @@ public class BuildRepositoryRemoteImpl {
         }
         try {
             agentService.updateRuntimeInfo(info);
-            return new AgentInstruction(agentService.findAgentAndRefreshStatus(info.getUUId()).isCancelled());
+            boolean isCancelled = agentService.findAgentAndRefreshStatus(info.getUUId()).isCancelled();
+            return new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, Boolean.toString(isCancelled));
         } catch (AgentWithDuplicateUUIDException agentException) {
             throw wrappedException(agentException);
         } catch (Exception e) {

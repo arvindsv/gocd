@@ -16,15 +16,7 @@
 
 package com.thoughtworks.go.remote;
 
-import java.util.Arrays;
-import java.util.List;
-
-import com.thoughtworks.go.domain.AgentInstance;
-import com.thoughtworks.go.domain.AgentStatus;
-import com.thoughtworks.go.domain.JobIdentifier;
-import com.thoughtworks.go.domain.JobResult;
-import com.thoughtworks.go.domain.JobState;
-import com.thoughtworks.go.domain.StageIdentifier;
+import com.thoughtworks.go.domain.*;
 import com.thoughtworks.go.server.messaging.JobStatusMessage;
 import com.thoughtworks.go.server.messaging.JobStatusTopic;
 import com.thoughtworks.go.server.service.AgentRuntimeInfo;
@@ -39,15 +31,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.remoting.RemoteAccessException;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class BuildRepositoryRemoteImplTest {
     private BuildRepositoryService repositoryService;
@@ -77,7 +69,8 @@ public class BuildRepositoryRemoteImplTest {
         info.setStatus(AgentStatus.Cancelled);
         when(agentService.findAgentAndRefreshStatus(info.getUUId())).thenReturn(AgentInstance.createFromLiveAgent(info, new SystemEnvironment()));
         AgentInstruction instruction = buildRepository.ping(info);
-        assertThat(instruction.isShouldCancelJob(), is(true));
+        assertThat(instruction.type(), is(AgentInstructionTypes.TYPE_CANCEL_JOB));
+        assertThat(instruction.data(), is("true"));
         verify(agentService).updateRuntimeInfo(info);
         assertThat(log(), hasItem(info + " ping received."));
     }

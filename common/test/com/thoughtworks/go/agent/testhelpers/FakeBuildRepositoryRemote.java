@@ -16,23 +16,24 @@
 
 package com.thoughtworks.go.agent.testhelpers;
 
+import com.thoughtworks.go.domain.AgentRuntimeStatus;
+import com.thoughtworks.go.domain.JobIdentifier;
+import com.thoughtworks.go.domain.JobResult;
+import com.thoughtworks.go.domain.JobState;
+import com.thoughtworks.go.remote.AgentIdentifier;
+import com.thoughtworks.go.remote.AgentInstruction;
+import com.thoughtworks.go.remote.AgentInstructionTypes;
+import com.thoughtworks.go.remote.BuildRepositoryRemote;
+import com.thoughtworks.go.remote.work.Work;
+import com.thoughtworks.go.server.service.AgentRuntimeInfo;
+import com.thoughtworks.go.util.SystemEnvironment;
+import org.apache.log4j.Logger;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
-import com.thoughtworks.go.domain.AgentRuntimeStatus;
-import com.thoughtworks.go.domain.JobIdentifier;
-import com.thoughtworks.go.domain.JobResult;
-import com.thoughtworks.go.domain.JobState;
-import com.thoughtworks.go.remote.AgentInstruction;
-import com.thoughtworks.go.remote.BuildRepositoryRemote;
-import com.thoughtworks.go.remote.AgentIdentifier;
-import com.thoughtworks.go.remote.work.Work;
-import com.thoughtworks.go.server.service.AgentRuntimeInfo;
-import com.thoughtworks.go.util.SystemEnvironment;
-import org.apache.log4j.Logger;
 
 public class FakeBuildRepositoryRemote implements BuildRepositoryRemote {
     public final static List<AgentRuntimeStatus> AGENT_STATUS = new ArrayList<AgentRuntimeStatus>();
@@ -48,7 +49,7 @@ public class FakeBuildRepositoryRemote implements BuildRepositoryRemote {
 
     public AgentInstruction ping(AgentRuntimeInfo info) {
         AGENT_STATUS.add(info.getRuntimeStatus());
-        return new AgentInstruction(false);
+        return new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false");
     }
 
     public Work getWork(AgentRuntimeInfo runtimeInfo) {

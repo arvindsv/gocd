@@ -19,6 +19,7 @@ package com.thoughtworks.go.agent;
 import com.thoughtworks.go.publishers.GoArtifactsManipulator;
 import com.thoughtworks.go.remote.AgentIdentifier;
 import com.thoughtworks.go.remote.AgentInstruction;
+import com.thoughtworks.go.remote.AgentInstructionTypes;
 import com.thoughtworks.go.remote.BuildRepositoryRemote;
 import com.thoughtworks.go.remote.work.Work;
 import com.thoughtworks.go.util.command.EnvironmentVariableContext;
@@ -31,7 +32,7 @@ public class JobRunner {
     private EnvironmentVariableContext environmentVariableContext = new EnvironmentVariableContext();
 
     public void handleInstruction(AgentInstruction instruction, AgentRuntimeInfo agentStatus) {
-        if (instruction.isShouldCancelJob() && !handled) {
+        if (AgentInstructionTypes.TYPE_CANCEL_JOB.equals(instruction.type()) && Boolean.toString(true).equals(instruction.data()) && !handled) {
             cancelJob(agentStatus);
         }
     }
