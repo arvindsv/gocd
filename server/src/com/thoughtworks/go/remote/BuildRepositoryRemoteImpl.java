@@ -25,6 +25,7 @@ import com.thoughtworks.go.server.service.AgentRuntimeInfo;
 import com.thoughtworks.go.server.service.AgentService;
 import com.thoughtworks.go.server.service.AgentWithDuplicateUUIDException;
 import com.thoughtworks.go.server.service.BuildRepositoryService;
+import com.thoughtworks.go.server.service.config.SshKeysService;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.remoting.RemoteAccessException;
@@ -36,12 +37,14 @@ public class BuildRepositoryRemoteImpl {
 
     private AgentService agentService;
     private BuildRepositoryService buildRepositoryService;
+    private SshKeysService sshKeysService;
     private JobStatusTopic jobStatusTopic;
 
     @Autowired
-    BuildRepositoryRemoteImpl(BuildRepositoryService buildRepositoryService, AgentService agentService, JobStatusTopic jobStatusTopic) {
+    BuildRepositoryRemoteImpl(BuildRepositoryService buildRepositoryService, AgentService agentService, SshKeysService sshKeysService, JobStatusTopic jobStatusTopic) {
         this.buildRepositoryService = buildRepositoryService;
         this.agentService = agentService;
+        this.sshKeysService = sshKeysService;
         this.jobStatusTopic = jobStatusTopic;
     }
 
@@ -53,7 +56,8 @@ public class BuildRepositoryRemoteImpl {
             agentService.updateRuntimeInfo(info);
             boolean isCancelled = agentService.findAgentAndRefreshStatus(info.getUUId()).isCancelled();
             return new AgentInstruction[]{
-                    new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, Boolean.toString(isCancelled))
+                    new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, Boolean.toString(isCancelled)),
+                    new AgentInstruction(AgentInstructionTypes.TYPE_SSH_KEYSTORE_CHECKSUM_UPDATE_JOB, sshKeysService.checksum())
             };
         } catch (AgentWithDuplicateUUIDException agentException) {
             throw wrappedException(agentException);

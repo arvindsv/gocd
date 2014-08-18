@@ -57,6 +57,6 @@ public class AgentInstruction implements Serializable {
 
     @Override
     public String toString() {
-        return "AgentInstruction: Type = " + type;
+        return "AgentInstruction: Type = " + type + ", Data = " + data;
     }
 }

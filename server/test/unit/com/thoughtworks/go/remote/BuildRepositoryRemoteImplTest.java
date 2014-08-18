@@ -22,6 +22,7 @@ import com.thoughtworks.go.server.messaging.JobStatusTopic;
 import com.thoughtworks.go.server.service.AgentRuntimeInfo;
 import com.thoughtworks.go.server.service.AgentService;
 import com.thoughtworks.go.server.service.BuildRepositoryService;
+import com.thoughtworks.go.server.service.config.SshKeysService;
 import com.thoughtworks.go.util.LogFixture;
 import com.thoughtworks.go.util.SystemEnvironment;
 import org.apache.log4j.Level;
@@ -48,13 +49,15 @@ public class BuildRepositoryRemoteImplTest {
     private BuildRepositoryRemoteImpl buildRepository;
     private LogFixture logFixture;
     private AgentRuntimeInfo info;
+    private SshKeysService sshKeysService;
 
     @Before
     public void setUp() {
         repositoryService = mock(BuildRepositoryService.class);
         agentService = mock(AgentService.class);
+        sshKeysService = mock(SshKeysService.class);
         jobStatusTopic = mock(JobStatusTopic.class);
-        buildRepository = new BuildRepositoryRemoteImpl(repositoryService, agentService, jobStatusTopic);
+        buildRepository = new BuildRepositoryRemoteImpl(repositoryService, agentService, sshKeysService, jobStatusTopic);
         logFixture = LogFixture.startListening(Level.TRACE);
         info = AgentRuntimeInfo.fromAgent(new AgentIdentifier("host", "192.168.1.1", "uuid"), "cookie", null);
     }
@@ -70,9 +73,7 @@ public class BuildRepositoryRemoteImplTest {
         when(agentService.findAgentAndRefreshStatus(info.getUUId())).thenReturn(AgentInstance.createFromLiveAgent(info, new SystemEnvironment()));
         AgentInstruction[] instructions = buildRepository.ping(info);
 
-        assertThat(instructions.length, is(1));
-        assertThat(instructions[0].type(), is(AgentInstructionTypes.TYPE_CANCEL_JOB));
-        assertThat(instructions[0].data(), is("true"));
+        assertHasInstruction(instructions, AgentInstructionTypes.TYPE_CANCEL_JOB, "true");
 
         verify(agentService).updateRuntimeInfo(info);
         assertThat(log(), hasItem(info + " ping received."));
@@ -89,6 +90,18 @@ public class BuildRepositoryRemoteImplTest {
             assertRemoteException(e, runtimeException);
         }
         assertThat(log(), hasItem("Error occurred in " + info + " ping."));
+    }
+
+    @Test
+    public void shouldSendBackTheCurrentSSHKeystoreChecksumAsAPartOfPingResponse() {
+        String checksum = "SOME-CHECKSUM-1";
+
+        when(agentService.findAgentAndRefreshStatus(info.getUUId())).thenReturn(AgentInstance.createFromLiveAgent(info, new SystemEnvironment()));
+        when(sshKeysService.checksum()).thenReturn(checksum);
+
+        AgentInstruction[] instructions = buildRepository.ping(info);
+
+        assertHasInstruction(instructions, AgentInstructionTypes.TYPE_SSH_KEYSTORE_CHECKSUM_UPDATE_JOB, checksum);
     }
 
     @Test
@@ -213,5 +226,14 @@ public class BuildRepositoryRemoteImplTest {
 
     private List<String> log() {
         return Arrays.asList(logFixture.getMessages());
+    }
+
+    private void assertHasInstruction(AgentInstruction[] instructions, String type, String data) {
+        for (AgentInstruction instruction : instructions) {
+            if (type.equals(instruction.type()) && data.equals(instruction.data())) {
+                return;
+            }
+        }
+        fail("Did not find instruction of type: " + type + " and data: " + data + ", in instructions: " + Arrays.asList(instructions));
     }
 }

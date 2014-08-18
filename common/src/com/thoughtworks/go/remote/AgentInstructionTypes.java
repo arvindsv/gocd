@@ -17,5 +17,6 @@
 package com.thoughtworks.go.remote;
 
 public class AgentInstructionTypes {
-    public static String TYPE_CANCEL_JOB = "AGENT_INSTRUCTION_CANCEL_JOB";
+    public static final String TYPE_SSH_KEYSTORE_CHECKSUM_UPDATE_JOB = "AGENT_INSTRUCTION_SSH_CHECKSUM_UPDATE_JOB";
+    public static final String TYPE_CANCEL_JOB = "AGENT_INSTRUCTION_CANCEL_JOB";
 }
