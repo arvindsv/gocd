@@ -115,18 +115,20 @@ public class SshKeyStore {
     }
 
     public String checksum() {
-        if (cachedChecksum == null) {
+        String copyOfCachedChecksum = cachedChecksum;
+        if (copyOfCachedChecksum == null) {
             synchronized (lockForKey) {
                 loadFromCacheIfNeeded();
                 try {
-                    cachedChecksum = DigestUtils.sha256Hex(FileUtils.readFileToString(sshKeysFile()));
+                    copyOfCachedChecksum = DigestUtils.sha256Hex(FileUtils.readFileToString(sshKeysFile()));
+                    cachedChecksum = copyOfCachedChecksum;
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
         }
 
-        return cachedChecksum;
+        return copyOfCachedChecksum;
     }
 
     private List<SshKey> readFromConfig() throws Exception {
