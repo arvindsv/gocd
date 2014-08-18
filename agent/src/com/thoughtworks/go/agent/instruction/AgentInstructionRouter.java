@@ -18,6 +18,8 @@ package com.thoughtworks.go.agent.instruction;
 
 import com.thoughtworks.go.remote.AgentInstruction;
 import com.thoughtworks.go.server.service.AgentRuntimeInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +29,7 @@ import java.util.List;
 @Component
 public class AgentInstructionRouter {
     private final List<AgentInstructionHandler> agentInstructionHandlers = new ArrayList<AgentInstructionHandler>();
+    private static final Log LOG = LogFactory.getLog(AgentInstructionRouter.class);
 
     @Autowired
     public AgentInstructionRouter() {
@@ -43,5 +46,6 @@ public class AgentInstructionRouter {
                 return;
             }
         }
+        LOG.warn("No handler found for instruction: " + instruction);
     }
 }

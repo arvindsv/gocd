@@ -58,7 +58,7 @@ public class AgentController {
 
     private final String hostName;
     private final String ipAddress;
-    private AgentInstruction instruction = new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false");
+    private AgentInstruction[] instruction = new AgentInstruction[]{new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false")};
     private CancelInstructionHandler cancelInstructionHandler = new CancelInstructionHandler();
     private AgentRuntimeInfo agentRuntimeInfo;
     private SubprocessLogger subprocessLogger;
@@ -193,7 +193,7 @@ public class AgentController {
     }
 
     public void executeAgentInstruction() {
-        agentInstructionRouter.routeInstruction(instruction, agentRuntimeInfo);
+        agentInstructionRouter.routeInstruction(instruction[0], agentRuntimeInfo);
     }
 
     boolean isCausedBySecurity(Throwable e) {

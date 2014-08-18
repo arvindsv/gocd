@@ -45,14 +45,16 @@ public class BuildRepositoryRemoteImpl {
         this.jobStatusTopic = jobStatusTopic;
     }
 
-    public AgentInstruction ping(AgentRuntimeInfo info) {
+    public AgentInstruction[] ping(AgentRuntimeInfo info) {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(info + " ping received.");
         }
         try {
             agentService.updateRuntimeInfo(info);
             boolean isCancelled = agentService.findAgentAndRefreshStatus(info.getUUId()).isCancelled();
-            return new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, Boolean.toString(isCancelled));
+            return new AgentInstruction[]{
+                    new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, Boolean.toString(isCancelled))
+            };
         } catch (AgentWithDuplicateUUIDException agentException) {
             throw wrappedException(agentException);
         } catch (Exception e) {

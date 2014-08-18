@@ -41,7 +41,7 @@ public class BuildRepositoryMessageProducer implements BuildRepositoryRemote {
         this.workAssignmentPerformanceLogger = workAssignmentPerformanceLogger;
     }
 
-    public AgentInstruction ping(AgentRuntimeInfo info) {
+    public AgentInstruction[] ping(AgentRuntimeInfo info) {
         return buildRepository.ping(info);
     }
 

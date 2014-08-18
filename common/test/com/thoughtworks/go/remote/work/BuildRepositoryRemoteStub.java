@@ -41,8 +41,8 @@ public class BuildRepositoryRemoteStub implements BuildRepositoryRemote {
         this.isIgnored = isIgnored;
     }
 
-    public AgentInstruction ping(AgentRuntimeInfo info) {
-        return new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false");
+    public AgentInstruction[] ping(AgentRuntimeInfo info) {
+        return new AgentInstruction[]{new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false")};
     }
 
     public Work getWork(AgentRuntimeInfo runtimeInfo) {

@@ -47,9 +47,9 @@ public class FakeBuildRepositoryRemote implements BuildRepositoryRemote {
 
     private static BlockingQueue<Boolean> buildResult = new LinkedBlockingQueue<Boolean>();
 
-    public AgentInstruction ping(AgentRuntimeInfo info) {
+    public AgentInstruction[] ping(AgentRuntimeInfo info) {
         AGENT_STATUS.add(info.getRuntimeStatus());
-        return new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false");
+        return new AgentInstruction[]{new AgentInstruction(AgentInstructionTypes.TYPE_CANCEL_JOB, "false")};
     }
 
     public Work getWork(AgentRuntimeInfo runtimeInfo) {

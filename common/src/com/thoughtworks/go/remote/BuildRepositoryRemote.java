@@ -26,7 +26,7 @@ import com.thoughtworks.go.server.service.AgentRuntimeInfo;
  * Communication from agent to the BuildLoop server.
  */
 public interface BuildRepositoryRemote {
-    AgentInstruction ping(AgentRuntimeInfo info);
+    AgentInstruction[] ping(AgentRuntimeInfo info);
 
     Work getWork(AgentRuntimeInfo runtimeInfo);
 
