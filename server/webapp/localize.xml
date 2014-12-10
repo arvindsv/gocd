@@ -783,4 +783,5 @@
     <entry key="APACHE_LICENSE_2_0">Apache License, Version 2.0</entry>
     <entry key="THIRD_PARTY_SOFTWARE">third-party software</entry>
     <entry key="GARAGE_MESSAGE">{0}</entry>
+    <entry key="FEATURE_TOGGLES_TITLE">Feature Toggles</entry>
 </properties>
