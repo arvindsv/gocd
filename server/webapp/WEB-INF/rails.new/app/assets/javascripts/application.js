@@ -44,4 +44,5 @@
 //= require "micro_content_popup.js"
 //= require "ajax_popup_handler.js"
 //= require "compare_pipelines.js"
+//= require "lib/handlebars-v2.0.0.js"
 //= require_directory .

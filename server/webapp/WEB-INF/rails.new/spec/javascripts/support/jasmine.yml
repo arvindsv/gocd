@@ -108,6 +108,7 @@ spec_files:
   - "fetch_pipelines_using_given_package_spec.js"
   - "add_new_package_definition_state_spec.js"
   - "ajax_form_submit_spec.js"
+  - "feature_toggles_spec.js"
 #  - "**/*[Ss]pec.{js.coffee,js,coffee}"
 
 # path to directory of temporary files
