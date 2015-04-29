@@ -76,6 +76,7 @@ public class SystemEnvironment implements Serializable, ConfigDirProvider {
     private String defaultDbPort = "9153";
     private static final String DB_UPGRADE_H2_DELTAS_FOLDER = "h2deltas";
     private boolean debug;
+    public static final GoBooleanSystemProperty DEBUG_DB_CONNECTIONS = new GoBooleanSystemProperty("debug.db.connections", false);
 
     public static final String CRUISE_PROPERTIES = "/cruise.properties";
     private Properties properties;
