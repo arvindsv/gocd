@@ -22,6 +22,7 @@ import com.thoughtworks.go.util.ArrayUtil;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.text.MessageFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
@@ -37,6 +38,7 @@ public class WrappedConnection implements Connection {
 
     private final String trace;
     private final java.util.Date startTime;
+    private final String threadWhichGotTheConnection;
     private WrappedDataSource wrappedDataSource;
     private final Connection wrappedConnection;
     private final long id;
@@ -47,12 +49,13 @@ public class WrappedConnection implements Connection {
 
         this.startTime = new java.util.Date();
         this.id = id;
-        this.trace = Thread.currentThread().getName() + "\n  " + ArrayUtil.join(Thread.currentThread().getStackTrace(), "\n  ");
+        this.threadWhichGotTheConnection = Thread.currentThread().getName();
+        this.trace = ArrayUtil.join(Thread.currentThread().getStackTrace(), "\n  ");
         LOGGER.debug("OPEN  {}", id);
     }
 
-    public String getTrace() {
-        return id + ": " + startTime + ":  " + trace;
+    public String getInformation(boolean showStackTrace) {
+        return MessageFormat.format("{0}: {1}: {2}{3}", id, startTime, threadWhichGotTheConnection, showStackTrace ? "\n  " + trace : "");
     }
 
     public Statement createStatement() throws SQLException {

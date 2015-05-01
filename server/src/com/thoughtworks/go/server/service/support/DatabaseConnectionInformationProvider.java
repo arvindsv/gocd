@@ -62,20 +62,27 @@ public class DatabaseConnectionInformationProvider implements ServerInfoProvider
 
         infoCollector.addSubSection("Current open connections");
 
-        long startTime = System.nanoTime();
         Map<WrappedConnection, String> connectionsMap = dataSource.getConnections();
         Set<WrappedConnection> connections = connectionsMap.keySet();
+        StringBuilder builder = new StringBuilder();
+
+        long startTime = System.nanoTime();
         synchronized (connectionsMap) {
             Iterator i = connections.iterator();
             while (i.hasNext()) {
                 WrappedConnection connection = (WrappedConnection) i.next();
                 if (connection != null) {
-                    infoCollector.append(connection.getTrace()).append("\n\n");
+                    infoCollector.append(connection.getInformation(false)).append("\n");
+                    builder.append(connection.getInformation(true)).append("\n\n");
                 }
             }
         }
+        long endTime = System.nanoTime();
 
-        infoCollector.append("Time in sync block for listing connections (nanoseconds): ").append(System.nanoTime() - startTime);
+        infoCollector.addSubSection("Details of open connections");
+        infoCollector.append(builder.toString());
+
+        infoCollector.append("Time in sync block for listing connections (nanoseconds): ").append(endTime - startTime);
     }
 
     @Override
