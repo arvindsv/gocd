@@ -16,15 +16,12 @@
 
 package com.thoughtworks.go.agent.functional;
 
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-
-import com.thoughtworks.go.agent.testhelpers.GoServerRunner;
 import com.thoughtworks.go.agent.testhelpers.FakeGoServer;
+import com.thoughtworks.go.agent.testhelpers.GoServerRunner;
 import com.thoughtworks.go.helper.RandomPort;
 import com.thoughtworks.go.security.AuthSSLProtocolSocketFactory;
 import com.thoughtworks.go.security.AuthSSLX509TrustManagerFactory;
+import com.thoughtworks.go.security.SSLContextInstanceFactory;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
@@ -33,6 +30,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.context.ContextConfiguration;
+
+import java.io.File;
+
+import static org.junit.Assert.assertTrue;
 
 @ContextConfiguration(locations = { })
 public class X509CertificateTest {
@@ -48,7 +49,7 @@ public class X509CertificateTest {
         AuthSSLX509TrustManagerFactory trustManagerFactory = new AuthSSLX509TrustManagerFactory(
                 truststore, GoServerRunner.PASSWORD);
 
-        protocolSocketFactory = new AuthSSLProtocolSocketFactory(trustManagerFactory, null);
+        protocolSocketFactory = new AuthSSLProtocolSocketFactory(trustManagerFactory, null, new SSLContextInstanceFactory());
         sslPort = RandomPort.find("X509CertificateTest-sslPort");
         serverPort = RandomPort.find("X509CertificateTest-serverPort");
         fakeGoServer = new FakeGoServer(serverPort, sslPort);

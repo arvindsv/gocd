@@ -16,21 +16,24 @@
 
 package com.thoughtworks.go.security;
 
-import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-
 import com.thoughtworks.go.util.ClassMockery;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocketFactory;
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(org.jmock.integration.junit4.JMock.class)
 public class AuthSSLProtocolSocketFactoryTest {
@@ -49,7 +52,7 @@ public class AuthSSLProtocolSocketFactoryTest {
             }
         });
 
-        AuthSSLProtocolSocketFactory factory = new AuthSSLProtocolSocketFactory(null, keyManagerFactory);
+        AuthSSLProtocolSocketFactory factory = new AuthSSLProtocolSocketFactory(null, keyManagerFactory, new SSLContextInstanceFactory());
 
         // first time: create ssl context with empty keystore
         SSLContext oldSslContext = factory.getSSLContext();
@@ -65,4 +68,14 @@ public class AuthSSLProtocolSocketFactoryTest {
         assertThat(oldSslContext, not(newSslContext));
     }
 
+    @Test
+    public void shouldEnableOnlyTheValidCiphersForJetty6() throws Exception {
+        SSLContextInstanceFactory instanceFactory = mock(SSLContextInstanceFactory.class);
+        SSLContext sslContext = mock(SSLContext.class);
+        when(instanceFactory.create()).thenReturn(sslContext);
+        when(sslContext.getServerSocketFactory()).thenReturn(mock(SSLServerSocketFactory.class));
+
+        AuthSSLProtocolSocketFactory socketFactory = new AuthSSLProtocolSocketFactory(null, null, instanceFactory);
+        socketFactory.createSocket("abc", 2020);
+    }
 }

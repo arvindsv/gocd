@@ -53,10 +53,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSessionContext;
-import javax.net.ssl.TrustManager;
+import javax.net.ssl.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -114,20 +111,23 @@ public class AuthSSLProtocolSocketFactory implements SecureProtocolSocketFactory
     private final AuthSSLKeyManagerFactory keyManagerFactory;
     private SSLContext sslContextWithKeyStore = null;
     private SSLContext sslContext = null;
+    private SSLContextInstanceFactory sslContextInstanceFactory;
 
     /* Use file based constructor */
     @Deprecated
-    public AuthSSLProtocolSocketFactory(
-            AuthSSLX509TrustManagerFactory trustManagerFactory, AuthSSLKeyManagerFactory keyManagerFactory) {
+    public AuthSSLProtocolSocketFactory(AuthSSLX509TrustManagerFactory trustManagerFactory, AuthSSLKeyManagerFactory keyManagerFactory,
+                                        SSLContextInstanceFactory sslContextInstanceFactory) {
         super();
         this.trustManagerFactory = trustManagerFactory;
         this.keyManagerFactory = keyManagerFactory;
+        this.sslContextInstanceFactory = sslContextInstanceFactory;
     }
 
-    public AuthSSLProtocolSocketFactory(File trustFile, File certificateFile, String storePassword) {
+    public AuthSSLProtocolSocketFactory(File trustFile, File certificateFile, String storePassword, SSLContextInstanceFactory sslContextInstanceFactory) {
         super();
         this.trustManagerFactory = new AuthSSLX509TrustManagerFactory(trustFile, storePassword);
         this.keyManagerFactory = new AuthSSLKeyManagerFactory(certificateFile, storePassword);
+        this.sslContextInstanceFactory = sslContextInstanceFactory;
     }
 
     public void registerAsHttpsProtocol() {
@@ -146,7 +146,7 @@ public class AuthSSLProtocolSocketFactory implements SecureProtocolSocketFactory
 
     private SSLContext createSSLContext(boolean certAuth) {
         try {
-            SSLContext context = SSLContext.getInstance("SSL");
+            SSLContext context = sslContextInstanceFactory.create();
             KeyManager[] keyManagers = keyManagerFactory == null ? null : keyManagerFactory.keyManagers();
             TrustManager[] trustManagers = trustManagerFactory == null ? null : trustManagerFactory.trustManagers();
             context.init(certAuth ? keyManagers : null, trustManagers, null);
@@ -188,8 +188,7 @@ public class AuthSSLProtocolSocketFactory implements SecureProtocolSocketFactory
      * @return Socket a new socket
      * @throws IOException if an I/O error occurs while creating the socket
      */
-    public Socket createSocket(final String host, final int port, final InetAddress localAddress, final int localPort,
-                               final HttpConnectionParams params)
+    public Socket createSocket(final String host, final int port, final InetAddress localAddress, final int localPort, final HttpConnectionParams params)
             throws IOException {
         if (params == null) {
             throw new IllegalArgumentException("Parameters may not be null");
@@ -197,37 +196,42 @@ public class AuthSSLProtocolSocketFactory implements SecureProtocolSocketFactory
         int timeout = params.getConnectionTimeout();
         SocketFactory socketfactory = getSSLContext().getSocketFactory();
         if (timeout == 0) {
-            return socketfactory.createSocket(host, port, localAddress, localPort);
+            return enableOnlyValidCiphers(socketfactory.createSocket(host, port, localAddress, localPort));
         } else {
             Socket socket = socketfactory.createSocket();
             SocketAddress localaddr = new InetSocketAddress(localAddress, localPort);
             SocketAddress remoteaddr = new InetSocketAddress(host, port);
             socket.bind(localaddr);
             socket.connect(remoteaddr, timeout);
-            return socket;
+            return enableOnlyValidCiphers(socket);
         }
     }
 
     /**
      * @see SecureProtocolSocketFactory#createSocket(java.lang.String,int,java.net.InetAddress,int)
      */
-    public Socket createSocket(String host, int port, InetAddress clientHost, int clientPort)
-            throws IOException {
-        return getSSLContext().getSocketFactory().createSocket(host, port, clientHost, clientPort);
+    public Socket createSocket(String host, int port, InetAddress clientHost, int clientPort) throws IOException {
+        return enableOnlyValidCiphers(getSSLContext().getSocketFactory().createSocket(host, port, clientHost, clientPort));
     }
 
     /**
      * @see SecureProtocolSocketFactory#createSocket(java.lang.String,int)
      */
     public Socket createSocket(String host, int port) throws IOException {
-        return getSSLContext().getSocketFactory().createSocket(host, port);
+        return enableOnlyValidCiphers(getSSLContext().getSocketFactory().createSocket(host, port));
     }
 
     /**
      * @see SecureProtocolSocketFactory#createSocket(java.net.Socket,java.lang.String,int,boolean)
      */
-    public Socket createSocket(Socket socket, String host, int port, boolean autoClose)
-            throws IOException {
-        return getSSLContext().getSocketFactory().createSocket(socket, host, port, autoClose);
+    public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException {
+        return enableOnlyValidCiphers(getSSLContext().getSocketFactory().createSocket(socket, host, port, autoClose));
+    }
+
+    private Socket enableOnlyValidCiphers(Socket socket) {
+        if (socket instanceof SSLSocket && !("Y".equals(System.getProperty("dont.disable.ciphers", "")))) {
+            ((SSLSocket) socket).setEnabledCipherSuites(new String[]{"SSL_RSA_WITH_RC4_128_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_WITH_RC4_128_MD5"});
+        }
+        return socket;
     }
 }

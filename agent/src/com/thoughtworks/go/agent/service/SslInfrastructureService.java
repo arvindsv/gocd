@@ -22,6 +22,7 @@ import com.thoughtworks.go.config.GuidService;
 import com.thoughtworks.go.security.AuthSSLProtocolSocketFactory;
 import com.thoughtworks.go.security.KeyStoreManager;
 import com.thoughtworks.go.security.Registration;
+import com.thoughtworks.go.security.SSLContextInstanceFactory;
 import com.thoughtworks.go.server.service.AgentRuntimeInfo;
 import com.thoughtworks.go.util.SystemEnvironment;
 import com.thoughtworks.go.util.SystemUtil;
@@ -78,8 +79,7 @@ public class SslInfrastructureService {
     public void createSslInfrastructure() throws IOException {
         File parentFile = AGENT_TRUST_FILE.getParentFile();
         if (parentFile.exists() || parentFile.mkdirs()) {
-            protocolSocketFactory = new AuthSSLProtocolSocketFactory(
-                    AGENT_TRUST_FILE, AGENT_CERTIFICATE_FILE, AGENT_STORE_PASSWORD);
+            protocolSocketFactory = new AuthSSLProtocolSocketFactory(AGENT_TRUST_FILE, AGENT_CERTIFICATE_FILE, AGENT_STORE_PASSWORD, new SSLContextInstanceFactory());
             protocolSocketFactory.registerAsHttpsProtocol();
         } else {
             bomb("Unable to create folder " + parentFile.getAbsolutePath());
