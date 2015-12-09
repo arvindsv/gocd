@@ -34,6 +34,11 @@ public abstract class Builder implements Serializable {
     private String description;
     private Builder cancelBuilder;
 
+    /* WARNING: Only for serialization and deserialization. */
+    protected Builder() {
+        this.conditions = new RunIfConfigs();
+    }
+
     public Builder(RunIfConfigs conditions, Builder cancelBuilder, String description) {
         this.conditions = conditions;
         this.cancelBuilder = cancelBuilder;

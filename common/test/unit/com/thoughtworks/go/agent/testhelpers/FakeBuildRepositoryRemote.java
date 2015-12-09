@@ -78,7 +78,7 @@ public class FakeBuildRepositoryRemote implements BuildRepositoryRemote {
         LOGGER.info("Completed Build");
     }
 
-    public boolean isIgnored(JobIdentifier jobIdentifier) {
+    public Boolean isIgnored(JobIdentifier jobIdentifier) {
         return false;
     }
 

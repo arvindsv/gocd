@@ -34,7 +34,7 @@
         <task:scheduled ref="configRepositoryGCWarningService" method="checkRepoAndAddWarningIfRequired" fixed-delay="${go.config.repo.gc.check.interval}"/>
     </task:scheduled-tasks>
 
-    <bean name="/remoteBuildRepository" class="org.springframework.remoting.httpinvoker.HttpInvokerServiceExporter"
+    <bean name="/remoteBuildRepository" class="com.thoughtworks.go.remote.communication.GoAgentServerRemoteCommunicationServer"
           p:service-ref="buildRepositoryImpl"
           p:serviceInterface="com.thoughtworks.go.remote.BuildRepositoryRemote"/>
 

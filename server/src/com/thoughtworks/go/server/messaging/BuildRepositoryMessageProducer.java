@@ -62,7 +62,7 @@ public class BuildRepositoryMessageProducer implements BuildRepositoryRemote {
         buildRepository.reportCompleting(agentRuntimeInfo, jobIdentifier, result);
     }
 
-    public boolean isIgnored(JobIdentifier jobIdentifier) {
+    public Boolean isIgnored(JobIdentifier jobIdentifier) {
         return buildRepository.isIgnored(jobIdentifier);
     }
 

@@ -44,7 +44,7 @@
     <bean id="buildLoopServer" class="com.thoughtworks.go.agent.service.HttpInvokerProxyFactoryWrapper"
           p:serviceInterface="com.thoughtworks.go.remote.BuildRepositoryRemote">
         <property name="httpInvokerRequestExecutor">
-            <bean class="org.springframework.remoting.httpinvoker.CommonsHttpInvokerRequestExecutor">
+            <bean class="com.thoughtworks.go.remote.communication.GoAgentServerRemoteCommunicationClient">
                 <property name="httpClient" ref="httpClient"/>
             </bean>
         </property>

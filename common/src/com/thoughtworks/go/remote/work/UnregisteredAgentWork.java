@@ -49,4 +49,18 @@ public class UnregisteredAgentWork implements Work {
         throw new UnregisteredAgentException(message, uuid);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        UnregisteredAgentWork that = (UnregisteredAgentWork) o;
+
+        return uuid.equals(that.uuid);
+    }
+
+    @Override
+    public int hashCode() {
+        return uuid.hashCode();
+    }
 }

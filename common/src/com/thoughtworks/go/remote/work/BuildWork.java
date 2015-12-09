@@ -26,6 +26,7 @@ import com.thoughtworks.go.plugin.access.scm.SCMExtension;
 import com.thoughtworks.go.publishers.GoArtifactsManipulator;
 import com.thoughtworks.go.remote.AgentIdentifier;
 import com.thoughtworks.go.remote.BuildRepositoryRemote;
+import com.thoughtworks.go.remote.communication.DoNotSerialize;
 import com.thoughtworks.go.server.service.AgentBuildingInfo;
 import com.thoughtworks.go.server.service.AgentRuntimeInfo;
 import com.thoughtworks.go.util.SystemEnvironment;
@@ -54,14 +55,20 @@ public class BuildWork implements Work {
     private static final Log LOGGER = LogFactory.getLog(BuildWork.class);
 
     private final BuildAssignment assignment;
-
-    private DefaultGoPublisher goPublisher;
-
     private TimeProvider timeProvider = new TimeProvider();
-    private JobPlan plan;
-    private File workingDirectory;
-    private MaterialRevisions materialRevisions;
+
+    @DoNotSerialize
+    private DefaultGoPublisher goPublisher;
+    @DoNotSerialize
     private GoControlLog buildLog;
+
+    @DoNotSerialize
+    private JobPlan plan;
+    @DoNotSerialize
+    private File workingDirectory;
+    @DoNotSerialize
+    private MaterialRevisions materialRevisions;
+    @DoNotSerialize
     private Builders builders;
 
     public BuildWork(BuildAssignment assignment) {

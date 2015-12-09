@@ -38,6 +38,11 @@ public abstract class BaseCommandBuilder extends Builder {
     protected File workingDir;
     protected String errorString = "";
 
+    /* WARNING: Only for serialization and deserialization. */
+    private BaseCommandBuilder() {
+        super();
+    }
+
     public BaseCommandBuilder(RunIfConfigs conditions, Builder cancelBuilder, String description, String command,
                               File workingDir) {
         super(conditions, cancelBuilder, description);

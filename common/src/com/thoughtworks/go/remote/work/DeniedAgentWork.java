@@ -46,4 +46,18 @@ public class DeniedAgentWork implements Work {
         agentruntimeInfo.idle();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DeniedAgentWork that = (DeniedAgentWork) o;
+
+        return uuid.equals(that.uuid);
+    }
+
+    @Override
+    public int hashCode() {
+        return uuid.hashCode();
+    }
 }

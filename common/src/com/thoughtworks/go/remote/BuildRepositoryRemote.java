@@ -36,7 +36,7 @@ public interface BuildRepositoryRemote {
 
     void reportCompleted(AgentRuntimeInfo agentRuntimeInfo, JobIdentifier jobIdentifier, JobResult result);
 
-    boolean isIgnored(JobIdentifier jobIdentifier);
+    Boolean isIgnored(JobIdentifier jobIdentifier);
 
     String getCookie(AgentIdentifier identifier, String location);
 }

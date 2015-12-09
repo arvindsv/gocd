@@ -61,7 +61,7 @@ public class BuildRepositoryRemoteStub implements BuildRepositoryRemote {
         states.add(JobState.Completed);
     }
 
-    public boolean isIgnored(JobIdentifier jobIdentifier) {
+    public Boolean isIgnored(JobIdentifier jobIdentifier) {
         return isIgnored;
     }
 
