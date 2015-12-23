@@ -16,8 +16,11 @@
 
 package com.thoughtworks.go.remote;
 
+import com.thoughtworks.go.remote.communication.AllowInSerializationBetweenAgentAndServer;
+
 import java.io.Serializable;
 
+@AllowInSerializationBetweenAgentAndServer
 public class AgentInstruction implements Serializable {
     private final boolean shouldCancelJob;
 

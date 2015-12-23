@@ -23,11 +23,13 @@ import com.thoughtworks.go.config.RunIfConfig;
 import com.thoughtworks.go.domain.BuildLogElement;
 import com.thoughtworks.go.domain.RunIfConfigs;
 import com.thoughtworks.go.plugin.access.pluggabletask.TaskExtension;
+import com.thoughtworks.go.remote.communication.AllowInSerializationBetweenAgentAndServer;
 import com.thoughtworks.go.work.DefaultGoPublisher;
 import com.thoughtworks.go.util.command.EnvironmentVariableContext;
 import com.thoughtworks.go.util.command.CruiseControlException;
 import org.apache.log4j.Logger;
 
+@AllowInSerializationBetweenAgentAndServer
 public abstract class Builder implements Serializable {
     private static final Logger LOGGER = Logger.getLogger(Builder.class);
     protected final RunIfConfigs conditions;

@@ -24,12 +24,14 @@ import com.thoughtworks.go.config.ArtifactPlan;
 import com.thoughtworks.go.config.ArtifactPropertiesGenerator;
 import com.thoughtworks.go.config.EnvironmentVariablesConfig;
 import com.thoughtworks.go.config.Resource;
+import com.thoughtworks.go.remote.communication.AllowInSerializationBetweenAgentAndServer;
 import com.thoughtworks.go.work.DefaultGoPublisher;
 import com.thoughtworks.go.util.command.EnvironmentVariableContext;
 
 /**
  * @understands how to perform a job. This is the persistent version of the JobConfig
  */
+@AllowInSerializationBetweenAgentAndServer
 public interface JobPlan extends Serializable {
     String getPipelineName();
 

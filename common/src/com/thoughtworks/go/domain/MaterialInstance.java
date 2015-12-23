@@ -19,6 +19,7 @@ package com.thoughtworks.go.domain;
 import com.thoughtworks.go.config.CaseInsensitiveString;
 import com.thoughtworks.go.config.materials.AbstractMaterial;
 import com.thoughtworks.go.domain.materials.Material;
+import com.thoughtworks.go.remote.communication.AllowInSerializationBetweenAgentAndServer;
 import com.thoughtworks.go.util.json.JsonHelper;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -31,6 +32,7 @@ import static com.thoughtworks.go.util.ExceptionUtils.bombIfNull;
 /**
  * @understands persistent material
  */
+@AllowInSerializationBetweenAgentAndServer
 public abstract class MaterialInstance extends PersistentObject {
     protected String url;
     protected String username;

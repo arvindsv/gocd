@@ -16,11 +16,11 @@
 
 package com.thoughtworks.go.domain;
 
+import com.thoughtworks.go.remote.communication.AllowInSerializationBetweenAgentAndServer;
+
 import java.util.Comparator;
 
-/**
- *
- */
+@AllowInSerializationBetweenAgentAndServer
 public enum JobResult implements ViewableStatus {
     Passed,
     Failed,

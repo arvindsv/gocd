@@ -24,12 +24,14 @@ import com.thoughtworks.go.plugin.access.scm.SCMExtension;
 import com.thoughtworks.go.publishers.GoArtifactsManipulator;
 import com.thoughtworks.go.remote.AgentIdentifier;
 import com.thoughtworks.go.remote.BuildRepositoryRemote;
+import com.thoughtworks.go.remote.communication.AllowInSerializationBetweenAgentAndServer;
 import com.thoughtworks.go.util.command.EnvironmentVariableContext;
 import com.thoughtworks.go.server.service.AgentRuntimeInfo;
 
 /**
  * Work that needs to be done by an agent.
  */
+@AllowInSerializationBetweenAgentAndServer
 public interface Work extends Serializable {
     void doWork(AgentIdentifier agentIdentifier, BuildRepositoryRemote remoteBuildRepository, GoArtifactsManipulator manipulator,
                 EnvironmentVariableContext environmentVariableContext, AgentRuntimeInfo agentRuntimeInfo,

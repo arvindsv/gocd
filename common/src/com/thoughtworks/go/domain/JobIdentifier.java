@@ -18,9 +18,11 @@ package com.thoughtworks.go.domain;
 
 import java.io.Serializable;
 
+import com.thoughtworks.go.remote.communication.AllowInSerializationBetweenAgentAndServer;
 import com.thoughtworks.go.util.UrlUtil;
 import com.thoughtworks.go.util.command.EnvironmentVariableContext;
 
+@AllowInSerializationBetweenAgentAndServer
 public class JobIdentifier implements Serializable, LocatableEntity {
     private String pipelineName;
     private Integer pipelineCounter;

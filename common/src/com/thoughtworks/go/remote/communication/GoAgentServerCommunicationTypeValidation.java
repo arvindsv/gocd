@@ -1,8 +1,7 @@
 package com.thoughtworks.go.remote.communication;
 
-import com.thoughtworks.go.remote.BuildRepositoryRemote;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 /* Understands valid classes for top-level of deserialization and ensures that lookup is quick. */
@@ -18,7 +17,7 @@ public class GoAgentServerCommunicationTypeValidation {
             return true;
         }
 
-        if (findAssignableClass(clazz)) {
+        if (someClassInHierarchyHasTheAnnotation(clazz)) {
             validClassesForDeserialization.add(clazz);
             return true;
         }
@@ -28,22 +27,31 @@ public class GoAgentServerCommunicationTypeValidation {
 
     private Set<Class<?>> initialListOfValidClassesForDeserialization() {
         Set<Class<?>> validClasses = new HashSet<>();
-        Method[] methodsInInterfaceForCommunication = BuildRepositoryRemote.class.getDeclaredMethods();
-
-        for (Method method : methodsInInterfaceForCommunication) {
-            validClasses.add(method.getReturnType());
-            Collections.addAll(validClasses, method.getParameterTypes());
-        }
-
+        validClasses.add(String.class);
+        validClasses.add(Boolean.class);
+        validClasses.add(RuntimeException.class); /* TODO: What other exceptions are possible, from Spring? */
         return validClasses;
     }
 
-    private boolean findAssignableClass(Class classUnderConsideration) {
-        for (Class<?> validClass : validClassesForDeserialization) {
-            if (validClass.isAssignableFrom(classUnderConsideration)) {
+    private boolean someClassInHierarchyHasTheAnnotation(Class classUnderConsideration) {
+        if (classUnderConsideration.isAnnotationPresent(AllowInSerializationBetweenAgentAndServer.class)) {
+            return true;
+        }
+
+        for (Class anInterface : classUnderConsideration.getInterfaces()) {
+            if (someClassInHierarchyHasTheAnnotation(anInterface)) {
                 return true;
             }
         }
+
+        Class clazz = classUnderConsideration.getSuperclass();
+        while (clazz != null) {
+            if (someClassInHierarchyHasTheAnnotation(clazz)) {
+                return true;
+            }
+            clazz = clazz.getSuperclass();
+        }
+
         return false;
     }
 }

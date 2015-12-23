@@ -59,7 +59,7 @@ public class GsonTypeAdapterForRemoteInvocation implements JsonSerializer<Remote
 
         for (int i = 0; i < parameterTypes.size(); i++) {
             classes[i] = serialization.toClass(parameterTypes.get(i).getAsJsonPrimitive().getAsString());
-            objects[i] = serialization.deserializeToTypeWithTypeValidityCheck(parameterTypes.get(i), arguments.get(i));
+            objects[i] = serialization.deserializeToType(parameterTypes.get(i), arguments.get(i));
         }
 
         return new Pair<>(classes, objects);

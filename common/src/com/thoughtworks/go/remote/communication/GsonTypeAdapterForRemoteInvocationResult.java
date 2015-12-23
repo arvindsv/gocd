@@ -35,7 +35,7 @@ public class GsonTypeAdapterForRemoteInvocationResult implements JsonSerializer<
         JsonElement typeOfException = jsonObject.get("typeOfException");
 
         if (typeOfValue != null && !typeOfValue.isJsonNull()) {
-            return new RemoteInvocationResult(serialization.deserializeToTypeWithTypeValidityCheck(typeOfValue, jsonObject.get("value")));
+            return new RemoteInvocationResult(serialization.deserializeToType(typeOfValue, jsonObject.get("value")));
         } else if (typeOfException != null && !typeOfException.isJsonNull()) {
             return new RemoteInvocationResult((Throwable) serialization.deserializeToType(typeOfException, jsonObject.get("exception")));
         }

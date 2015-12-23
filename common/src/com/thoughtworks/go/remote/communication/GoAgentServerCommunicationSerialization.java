@@ -13,12 +13,13 @@ public class GoAgentServerCommunicationSerialization {
         this.typeValidationForDeserialization = new GoAgentServerCommunicationTypeValidation();
     }
 
-    public Object deserializeToTypeWithTypeValidityCheck(JsonElement typeOfValue, JsonElement value) {
-        return deserializeWithOptionalTypeCheck(typeOfValue, value, true);
-    }
-
     public <T> T deserializeToType(JsonElement typeOfValue, JsonElement value) {
-        return deserializeWithOptionalTypeCheck(typeOfValue, value, false);
+        String typeAsString = typeOfValue.getAsJsonPrimitive().getAsString();
+        Class clazz = toClass(typeAsString);
+        ensureValidClass(clazz);
+
+        JsonElement jsonElementOfValue = isAPrimitive(clazz) ? value.getAsJsonPrimitive() : value.getAsJsonObject();
+        return (T) gson.fromJson(jsonElementOfValue, clazz);
     }
 
     public Class toClass(String className) {
@@ -33,17 +34,8 @@ public class GoAgentServerCommunicationSerialization {
         return gson.toJsonTree(value);
     }
 
-    private <T> T deserializeWithOptionalTypeCheck(JsonElement typeOfValue, JsonElement value, boolean shouldDoTypeCheck) {
-        String typeAsString = typeOfValue.getAsJsonPrimitive().getAsString();
-        Class clazz = toClass(typeAsString);
-        ensureValidClass(shouldDoTypeCheck, clazz);
-
-        JsonElement jsonElementOfValue = isAPrimitive(clazz) ? value.getAsJsonPrimitive() : value.getAsJsonObject();
-        return (T) gson.fromJson(jsonElementOfValue, clazz);
-    }
-
-    private void ensureValidClass(boolean shouldDoTypeCheck, Class clazz) {
-        if (shouldDoTypeCheck && !typeValidationForDeserialization.isValid(clazz)) {
+    private void ensureValidClass(Class clazz) {
+        if (!typeValidationForDeserialization.isValid(clazz)) {
             throw new RuntimeException("Invalid class for deserialization: " + clazz);
         }
     }

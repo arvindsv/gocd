@@ -55,10 +55,10 @@ public class GoAgentServerCommunicationSerializationTest {
         assertSuccessfulDeserialization(true);
         assertSuccessfulDeserialization("some-string");
 
-        assertFailedDeserialization(MaterialsMother.dependencyMaterial());
+        assertSuccessfulDeserialization(MaterialsMother.dependencyMaterial());
+        assertSuccessfulDeserialization(JobInstanceMother.jobPlan("job1", 1));
+
         assertFailedDeserialization(ModificationsMother.multipleModificationsInHg().get(0));
-        assertFailedDeserialization(ModificationsMother.multipleModificationsInHg().get(0));
-        assertFailedDeserialization(JobInstanceMother.jobPlan("job1", 1));
     }
 
     private void assertSuccessfulDeserialization(Object objectOfAValidTypeForDeserialization) {
@@ -80,7 +80,7 @@ public class GoAgentServerCommunicationSerializationTest {
     private void tryRoundtrip(Object object, Class<?> classToUseToTryToDeserialize, boolean shouldSucceed) {
         JsonElement serializedValue = serialization.serializeValue(object);
         try {
-            serialization.deserializeToTypeWithTypeValidityCheck(new JsonPrimitive(classToUseToTryToDeserialize.getCanonicalName()), serializedValue);
+            serialization.deserializeToType(new JsonPrimitive(classToUseToTryToDeserialize.getCanonicalName()), serializedValue);
 
             if (!shouldSucceed) {
                 fail("Should not have deserialized " + object + " using class: " + classToUseToTryToDeserialize);

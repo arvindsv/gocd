@@ -16,8 +16,11 @@
 
 package com.thoughtworks.go.remote;
 
+import com.thoughtworks.go.remote.communication.AllowInSerializationBetweenAgentAndServer;
+
 import java.io.Serializable;
 
+@AllowInSerializationBetweenAgentAndServer
 public class AgentIdentifier implements Serializable {
     private String hostName;
     private String ipAddress;

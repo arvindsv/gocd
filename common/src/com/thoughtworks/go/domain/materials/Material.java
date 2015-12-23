@@ -21,6 +21,7 @@ import com.thoughtworks.go.config.PipelineConfig;
 import com.thoughtworks.go.config.materials.SubprocessExecutionContext;
 import com.thoughtworks.go.domain.MaterialInstance;
 import com.thoughtworks.go.domain.MaterialRevision;
+import com.thoughtworks.go.remote.communication.AllowInSerializationBetweenAgentAndServer;
 import com.thoughtworks.go.util.command.EnvironmentVariableContext;
 import com.thoughtworks.go.util.command.ProcessOutputStreamConsumer;
 import java.util.LinkedHashMap;
@@ -30,6 +31,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Map;
 
+@AllowInSerializationBetweenAgentAndServer
 public interface Material extends Serializable {
 
     //-- DB and config behaviour

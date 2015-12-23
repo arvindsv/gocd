@@ -16,6 +16,9 @@
 
 package com.thoughtworks.go.domain;
 
+import com.thoughtworks.go.remote.communication.AllowInSerializationBetweenAgentAndServer;
+
+@AllowInSerializationBetweenAgentAndServer
 public enum JobState implements ViewableStatus {
     Unknown,
     Scheduled,  // Scheduled icon
