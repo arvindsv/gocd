@@ -1,8 +1,8 @@
 class ServiceCache
   @@services = {}
 
-  def self.get_service alias_name, service
-    @@services[alias_name] ||= Spring.bean(service)
+  def self.get_service alias_name, service_bean_name
+    @@services[alias_name] ||= Spring.bean(service_bean_name)
   end
 end
 

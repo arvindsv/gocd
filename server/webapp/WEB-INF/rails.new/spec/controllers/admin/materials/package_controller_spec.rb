@@ -17,10 +17,11 @@
 require 'spec_helper'
 load File.join(File.dirname(__FILE__), 'material_controller_examples.rb')
 
-describe Admin::Materials::PackageController do
+describe Admin::Materials::PackageController, :ignore_before_filters => false do
   include ConfigSaveStubbing
 
   before do
+    controller.stub(:populate_health_messages)
     @material = MaterialConfigsMother.packageMaterialConfig()
     @short_material_type = 'package'
   end

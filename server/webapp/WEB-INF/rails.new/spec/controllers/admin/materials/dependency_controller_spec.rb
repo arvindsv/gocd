@@ -17,10 +17,10 @@
 require 'spec_helper'
 load File.join(File.dirname(__FILE__), 'material_controller_examples.rb')
 
-describe Admin::Materials::DependencyController do
+describe Admin::Materials::DependencyController, :ignore_before_filters => true do
   include MockRegistryModule
+
   before do
-    controller.stub(:populate_health_messages)
     controller.stub(:go_config_service).and_return(@go_config_service = Object.new)
     @go_config_service.stub(:registry).and_return(MockRegistryModule::MockRegistry.new)
   end
@@ -94,11 +94,13 @@ describe Admin::Materials::DependencyController do
       ReflectionUtil.setField(@cruise_config, "md5", "1234abcd")
       @user = Username.new(CaseInsensitiveString.new("loser"))
       controller.stub(:current_user).and_return(@user)
-      @result = HttpLocalizedOperationResult.new
-      HttpLocalizedOperationResult.stub(:new).and_return(@result)
+
+      @result = stub_localized_result
+
+      allow(controller.security_service).to receive(:hasViewOrOperatePermissionForPipeline).and_return(true)
+
       pause_info = PipelinePauseInfo.paused("just for fun", "loser")
       @pipeline_pause_service.should_receive(:pipelinePauseInfo).with("pipeline-name").and_return(pause_info)
-      @go_config_service.stub(:registry).and_return(MockRegistryModule::MockRegistry.new)
     end
 
     it "should return pipeline [stage] json in alphabetical order" do

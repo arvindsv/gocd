@@ -16,7 +16,11 @@
 
 require 'spec_helper'
 
-describe Admin::CommandsController do
+describe Admin::CommandsController, :ignore_before_filters => true do
+
+  before :each do
+    stub_url_for_in_application_controller
+  end
 
   describe "routes" do
     it "should resolve commands" do
@@ -48,6 +52,7 @@ describe Admin::CommandsController do
 
     before :each do
       @command_repository_service = stub_service(:command_repository_service)
+      allow(controller.go_config_service).to receive(:registry).and_return(MockRegistryModule::MockRegistry.new)
     end
 
     describe "index" do

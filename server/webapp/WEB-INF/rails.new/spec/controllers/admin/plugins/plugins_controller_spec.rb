@@ -17,7 +17,6 @@
 require 'spec_helper'
 
 describe Admin::Plugins::PluginsController do
-
   describe :routes do
     it "should resolve the route_for_index" do
       {:get => "/admin/plugins"}.should route_to(:controller => "admin/plugins/plugins", :action => "index")

@@ -16,12 +16,14 @@
 
 require 'spec_helper'
 
-describe Admin::Materials::PluggableScmController do
+describe Admin::Materials::PluggableScmController, :ignore_before_filters => true do
   include ConfigSaveStubbing
   include MockRegistryModule
 
   before do
-    controller.stub(:populate_health_messages)
+    stub_url_for_in_application_controller
+    ignore_flash_message_service
+    allow(stub_localized_result).to receive(:message).with(controller.localizer).and_return("some_message")
   end
 
   describe "routes should resolve and generate" do

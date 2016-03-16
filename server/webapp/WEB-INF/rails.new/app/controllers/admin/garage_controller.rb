@@ -26,9 +26,9 @@ module Admin
       result = HttpLocalizedOperationResult.new
       garage_service.gc(result)
       if result.isSuccessful
-        flash[:notice] = {:gc => "#{result.message(Spring.bean('localizer'))}"}
+        flash[:notice] = {:gc => "#{result.message(localizer)}"}
       else
-        flash[:error] = {:gc => result.message(Spring.bean('localizer'))}
+        flash[:error] = {:gc => result.message(localizer)}
       end
       redirect_to garage_index_path
     end

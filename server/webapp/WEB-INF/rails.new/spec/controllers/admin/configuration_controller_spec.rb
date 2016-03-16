@@ -16,30 +16,28 @@
 
 require 'spec_helper'
 
-describe Admin::ConfigurationController do
+describe Admin::ConfigurationController, :ignore_before_filters => true do
 
   before(:each) do
-    @admin_service = double("admin_service")
-    @config_repository = double("config_repository")
-    controller.stub(:admin_service).and_return(@admin_service)
-    controller.stub(:config_repository).and_return(@config_repository)
+    allow(controller.go_config_service).to receive(:registry).and_return(MockRegistryModule::MockRegistry.new)
+    setup_localized_msg_for 'ADMINISTRATION', 'Administration'
   end
 
   describe "tab_name" do
     before :each do
       @config = {"content" => "config-content", "md5" => "md5", "location" => "/foo/bar"}
       cruise_config_revision = double('cruise config revision')
-      @config_repository.should_receive(:getRevision).with(@config['md5']).and_return(cruise_config_revision)
+      controller.config_repository.should_receive(:getRevision).with(@config['md5']).and_return(cruise_config_revision)
     end
 
     it "should set tab name for show" do
-      @admin_service.should_receive(:populateModel).with(anything).and_return(@config)
+      controller.admin_service.should_receive(:populateModel).with(anything).and_return(@config)
       get :show
       assigns[:tab_name].should == 'configuration-xml'
     end
 
     it "should set tab name for edit" do
-      @admin_service.should_receive(:configurationMapForSourceXml).and_return(@config)
+      controller.admin_service.should_receive(:configurationMapForSourceXml).and_return(@config)
       get :edit
       assigns[:tab_name].should == 'configuration-xml'
     end
@@ -49,11 +47,11 @@ describe Admin::ConfigurationController do
     before :each do
       @config = {"content" => "config-content", "md5" => "md5", "location" => "/foo/bar"}
       cruise_config_revision = double('cruise config revision')
-      @config_repository.should_receive(:getRevision).with(@config['md5']).and_return(cruise_config_revision)
+      controller.config_repository.should_receive(:getRevision).with(@config['md5']).and_return(cruise_config_revision)
     end
 
     it "should set tab name for show" do
-      @admin_service.should_receive(:populateModel).with(anything).and_return(@config)
+      controller.admin_service.should_receive(:populateModel).with(anything).and_return(@config)
 
       get :show
 
@@ -62,7 +60,7 @@ describe Admin::ConfigurationController do
     end
 
     it "should set tab name for edit" do
-      @admin_service.should_receive(:configurationMapForSourceXml).and_return(@config)
+      controller.admin_service.should_receive(:configurationMapForSourceXml).and_return(@config)
 
       get :edit
 
@@ -91,9 +89,9 @@ describe Admin::ConfigurationController do
   describe :show do
     it "should render view with config" do
       config = {"content" => "config-content", "md5" => "md5", "location" => "/foo/bar"}
-      @admin_service.should_receive(:populateModel).with(anything).and_return(config)
+      controller.admin_service.should_receive(:populateModel).with(anything).and_return(config)
       cruise_config_revision = double('cruise config revision')
-      @config_repository.should_receive(:getRevision).with(config['md5']).and_return(cruise_config_revision)
+      controller.config_repository.should_receive(:getRevision).with(config['md5']).and_return(cruise_config_revision)
 
       get :show
 
@@ -108,9 +106,9 @@ describe Admin::ConfigurationController do
   describe :edit do
     it "should render edit" do
       config = {"content" => "config-content", "md5" => "md5", "location" => "/foo/bar"}
-      @admin_service.should_receive(:configurationMapForSourceXml).and_return(config)
+      controller.admin_service.should_receive(:configurationMapForSourceXml).and_return(config)
       cruise_config_revision = double('cruise config revision')
-      @config_repository.should_receive(:getRevision).with(config['md5']).and_return(cruise_config_revision)
+      controller.config_repository.should_receive(:getRevision).with(config['md5']).and_return(cruise_config_revision)
 
       get :edit
 
@@ -125,7 +123,8 @@ describe Admin::ConfigurationController do
   describe :update do
     it "should update the configuration" do
       param_map = {"content" => "config_content", "md5" => "md5"}
-      @admin_service.should_receive(:updateConfig).with(param_map, an_instance_of(HttpLocalizedOperationResult)).and_return(GoConfigValidity::valid())
+      controller.admin_service.should_receive(:updateConfig).with(param_map, an_instance_of(HttpLocalizedOperationResult)).and_return(GoConfigValidity::valid())
+      setup_localized_msg_for 'SAVED_SUCCESSFULLY', 'Saved successfully.'
 
       put :update, :go_config => param_map
 
@@ -140,10 +139,11 @@ describe Admin::ConfigurationController do
       config_validity.should_receive(:isValid).and_return(false)
       config_validity.should_receive(:errorMessage).and_return('Wrong config xml')
       controller.stub(:switch_to_split_pane?).once.with(config_validity).and_return(false)
-      @admin_service.should_receive(:configurationMapForSourceXml).and_return(current_config)
-      @admin_service.should_receive(:updateConfig).with(submitted_copy, an_instance_of(HttpLocalizedOperationResult)).and_return(config_validity)
+      controller.admin_service.should_receive(:configurationMapForSourceXml).and_return(current_config)
+      controller.admin_service.should_receive(:updateConfig).with(submitted_copy, an_instance_of(HttpLocalizedOperationResult)).and_return(config_validity)
       cruise_config_revision = double('cruise config revision')
-      @config_repository.should_receive(:getRevision).with(submitted_copy['md5']).and_return(cruise_config_revision)
+      controller.config_repository.should_receive(:getRevision).with(submitted_copy['md5']).and_return(cruise_config_revision)
+      setup_localized_msg_for 'SAVE_FAILED', 'Save failed, see errors below'
 
       put :update, {:go_config => submitted_copy}
 
@@ -159,21 +159,25 @@ describe Admin::ConfigurationController do
     it "should render split pane when config save fails because of merge conflict" do
       current_config = {"content" => "config-content", "md5" => "md5", "location" => "/foo/bar"}
       submitted_copy = {"content" => "content-which-caused-conflict", "md5" => "md5"}
-      @admin_service.should_receive(:configurationMapForSourceXml).and_return(current_config)
+      controller.admin_service.should_receive(:configurationMapForSourceXml).and_return(current_config)
       config_validity = double('config validity')
       config_validity.should_receive(:isValid).and_return(false)
       config_validity.should_receive(:errorMessage).and_return('Conflict in merging')
       controller.stub(:switch_to_split_pane?).once.with(config_validity).and_return(true)
-      @admin_service.should_receive(:updateConfig).with(submitted_copy, an_instance_of(HttpLocalizedOperationResult)).and_return(config_validity)
+      controller.admin_service.should_receive(:updateConfig).with(submitted_copy, an_instance_of(HttpLocalizedOperationResult)).and_return(config_validity)
       cruise_config_revision = double('cruise config revision')
-      @config_repository.should_receive(:getRevision).with(current_config['md5']).and_return(cruise_config_revision)
+      controller.config_repository.should_receive(:getRevision).with(current_config['md5']).and_return(cruise_config_revision)
+
+      setup_localized_msg_for 'FLASH_MESSAGE_ON_CONFLICT', 'Configuration conflict'
+      setup_localized_msg_for 'SAVE_FAILED', 'Save failed, see errors below'
+      setup_localized_msg_for 'HELP_LINK_CONFIGURATION_REFERENCE', 'Help link details ...'
 
       put :update, {:go_config => submitted_copy}
 
       response.should render_template "split_pane"
-      flash.now[:error].should == "Someone has modified the configuration and your changes are in conflict. Please review, amend and retry."
+      flash.now[:error].should == 'Configuration conflict'
       assigns[:errors][0].should == "Conflict in merging"
-      assigns[:flash_help_link].should == "<a class='' href='http://www.go.cd/documentation/user/current/configuration/configuration_reference.html' target='_blank'>Help Topic: Configuration</a>"
+      assigns[:flash_help_link].should == 'Help link details ...'
       assigns[:conflicted_config].content.should == submitted_copy['content']
       assigns[:conflicted_config].md5.should == submitted_copy['md5']
       assigns[:conflicted_config].location.should == submitted_copy['location']
@@ -188,7 +192,9 @@ describe Admin::ConfigurationController do
       config_validity = double('config_validity')
       config_validity.should_receive(:isValid).and_return(true)
       config_validity.should_receive(:wasMerged).and_return(true)
-      @admin_service.should_receive(:updateConfig).with(submitted_copy, an_instance_of(HttpLocalizedOperationResult)).and_return(config_validity)
+      controller.admin_service.should_receive(:updateConfig).with(submitted_copy, an_instance_of(HttpLocalizedOperationResult)).and_return(config_validity)
+      setup_localized_msg_for 'SAVED_SUCCESSFULLY', 'Saved successfully.'
+      setup_localized_msg_for 'CONFIG_MERGED', 'The configuration was modified by someone else, but your changes were merged successfully.'
 
       put :update, {:go_config => submitted_copy}
 

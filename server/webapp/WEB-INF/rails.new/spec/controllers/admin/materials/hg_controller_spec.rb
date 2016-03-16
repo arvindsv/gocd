@@ -17,7 +17,7 @@
 require 'spec_helper'
 load File.join(File.dirname(__FILE__), 'material_controller_examples.rb')
 
-describe Admin::Materials::HgController do
+describe Admin::Materials::HgController, :ignore_before_filters => true do
   before do
     @material = MaterialConfigsMother.hgMaterialConfig("hg://foo.com")
     @short_material_type = 'hg'

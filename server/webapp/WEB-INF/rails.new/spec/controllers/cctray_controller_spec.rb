@@ -16,7 +16,7 @@
 
 require 'spec_helper'
 
-describe CctrayController do
+describe CctrayController, :ignore_before_filters => true do
   describe "routes" do
     it "should resolve its route" do
       expect(:get => '/cctray.xml').to route_to(:controller => "cctray", :action => "index", :format => "xml")
@@ -35,11 +35,8 @@ describe CctrayController do
         $servlet_context = double("servlet_context")
         expect($servlet_context).to receive(:getContextPath).and_return("/context_path")
 
-        server_config_service = stub_service(:server_config_service)
-        expect(server_config_service).to receive(:siteUrlFor).with("http://test.host/context_path", false).and_return(expected_prefix)
-
-        cc_tray_service = stub_service(:cc_tray_service)
-        expect(cc_tray_service).to receive(:getCcTrayXml).with(expected_prefix).and_return("RESPONSE_FOR_THIS_URL_PREFIX")
+        expect(controller.server_config_service).to receive(:siteUrlFor).with("http://test.host/context_path", false).and_return(expected_prefix)
+        expect(controller.cc_tray_service).to receive(:getCcTrayXml).with(expected_prefix).and_return("RESPONSE_FOR_THIS_URL_PREFIX")
 
         get :index
 

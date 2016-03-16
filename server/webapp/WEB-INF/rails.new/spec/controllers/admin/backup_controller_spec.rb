@@ -16,7 +16,7 @@
 
 require 'spec_helper'
 
-describe Admin::BackupController do
+describe Admin::BackupController, :ignore_before_filters => false do
 
   describe :routes do
 

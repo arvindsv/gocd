@@ -17,7 +17,7 @@
 require 'spec_helper'
 load File.join(File.dirname(__FILE__), 'material_controller_examples.rb')
 
-describe Admin::Materials::TfsController do
+describe Admin::Materials::TfsController, :ignore_before_filters => true do
 
   before :all do
     import com.thoughtworks.go.config.materials.tfs.TfsMaterialConfig unless defined? TfsMaterialConfig

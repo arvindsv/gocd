@@ -16,7 +16,7 @@
 
 require 'spec_helper'
 
-describe Admin::GarageController do
+describe Admin::GarageController, :ignore_before_filters => true do
   describe :route do
     it "should resolve index" do
       {:get => "/admin/garage"}.should route_to(:controller => "admin/garage", :action => "index")

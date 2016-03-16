@@ -51,10 +51,24 @@ RSpec.configure do |config|
   #     --seed 1234
   config.order = "random"
 
-  # clear flash messages for every spec
   config.before(:each) do
+    ServiceCacheStrategy.instance[:use_stubs] = false
     com.thoughtworks.go.server.web.FlashMessageService.useFlash(com.thoughtworks.go.server.web.FlashMessageService::Flash.new)
+  end
+
+  config.before(:each, :ignore_before_filters => false) do
     setup_base_urls
+  end
+
+  config.before(:each, :ignore_before_filters => true) do
+    ServiceCacheStrategy.instance[:use_stubs] = true
+
+    controller.stub(:populate_health_messages)
+    controller.stub(:populate_config_validity)
+    controller.stub(:set_site_urls_in_thread)
+    stub_localizer
+    controller.stub(:localizer)
+    allow(controller.go_config_service).to receive(:registry).and_return(MockRegistryModule::MockRegistry.new)
   end
 
   config.after(:each) do

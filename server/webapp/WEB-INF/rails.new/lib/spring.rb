@@ -23,6 +23,7 @@ class Spring
   MUTEX = Mutex.new
 
   def self.bean(bean_name)
+    # STDERR.puts "Calling for #{bean_name} from: #{caller.join("\n  ")}"
     context.get_bean(bean_name)
   rescue
     puts "Error loading bean #{bean_name} : #{$!.to_s}"

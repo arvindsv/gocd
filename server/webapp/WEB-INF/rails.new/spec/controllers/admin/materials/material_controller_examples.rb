@@ -19,8 +19,10 @@ shared_examples_for :material_controller do
   include ConfigSaveStubbing
   include MockRegistryModule
 
-  before do
-    controller.stub(:populate_health_messages)
+  before :each, :ignore_before_filters => true do
+    stub_url_for_in_application_controller
+    @result = stub_localized_result
+    allow(@result).to receive(:message).with(controller.localizer).and_return("some_message")
   end
 
   describe "routes should resolve and generate" do
@@ -76,6 +78,7 @@ shared_examples_for :material_controller do
     describe "create" do
       before :each do
         setup_for_new_material
+        ignore_flash_message_service
         @go_config_service.stub(:registry).and_return(MockRegistryModule::MockRegistry.new)
       end
       
@@ -113,6 +116,7 @@ shared_examples_for :material_controller do
       before do
         @go_config_service.should_receive(:loadForEdit).with("pipeline-name", @user, @result).and_return(@pipeline_config_for_edit)
         @go_config_service.stub(:registry).and_return(MockRegistryModule::MockRegistry.new)
+        allow(controller.security_service).to receive(:hasViewOrOperatePermissionForPipeline).and_return(true)
       end
 
       it "should edit an existing material" do
@@ -131,6 +135,8 @@ shared_examples_for :material_controller do
 
       before :each do
         setup_other_form_objects
+        ignore_flash_message_service
+        allow(controller.security_service).to receive(:hasViewOrOperatePermissionForPipeline).and_return(true)
         @go_config_service.stub(:registry).and_return(MockRegistryModule::MockRegistry.new)
         @go_config_service.stub(:getConfigForEditing).and_return(@cruise_config)
       end

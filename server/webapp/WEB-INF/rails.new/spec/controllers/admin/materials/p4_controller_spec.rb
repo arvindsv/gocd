@@ -17,7 +17,7 @@
 require 'spec_helper'
 load File.join(File.dirname(__FILE__), 'material_controller_examples.rb')
 
-describe Admin::Materials::P4Controller do
+describe Admin::Materials::P4Controller, :ignore_before_filters => true do
   before do
     @material = MaterialConfigsMother.p4MaterialConfig("tele.port:8154", "loser", "secret", "through_window", true)
     @short_material_type = 'p4'

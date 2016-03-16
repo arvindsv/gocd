@@ -40,15 +40,34 @@ module MiscSpecExtensions
   end
 
   def stub_service(service_getter)
-    service = double(service_getter.to_s.camelize)
-    controller.stub(service_getter).and_return(service)
-    ServiceCacheStrategy.instance.replace_service(service_getter.to_s, service)
-    service
+    ServiceCacheStrategy.instance.replace_service service_getter.to_s, double(service_getter.to_s) unless ServiceCacheStrategy.instance[:use_stubs]
+    controller.send(service_getter)
   end
 
   def stub_localized_result
     result = com.thoughtworks.go.server.service.result.HttpLocalizedOperationResult.new
     com.thoughtworks.go.server.service.result.HttpLocalizedOperationResult.stub(:new).and_return(result)
     result
+  end
+
+  def stub_localizer
+    allow_any_instance_of(RailsLocalizer::L).to receive(:method_missing) do |method, *args|
+      "LOC_#{method}_#{args[0]}"
+    end
+    controller.stub(:l).and_return(RailsLocalizer::L.new)
+  end
+
+  def setup_localized_msg_for key, translation_value
+    allow(controller.l).to receive(:string).with(key).and_return(translation_value)
+  end
+
+  def ignore_flash_message_service
+    allow(controller.flash_message_service).to receive(:add)
+  end
+
+  def stub_url_for_in_application_controller
+    controller.stub(:url_for) do |options_arg|
+      ActionController::Base.instance_method(:url_for).bind(controller).call(options_arg)
+    end
   end
 end

@@ -17,7 +17,7 @@
 require 'spec_helper'
 load File.join(File.dirname(__FILE__), 'material_controller_examples.rb')
 
-describe Admin::Materials::SvnController do
+describe Admin::Materials::SvnController, :ignore_before_filters => true do
   before do
     @material = MaterialConfigsMother.gitMaterialConfig("svn://foo.com")
     @short_material_type = 'svn'

@@ -17,7 +17,7 @@
 require 'spec_helper'
 load File.join(File.dirname(__FILE__), 'material_controller_examples.rb')
 
-describe Admin::Materials::GitController do
+describe Admin::Materials::GitController, :ignore_before_filters => true do
   before do
     @material = MaterialConfigsMother.gitMaterialConfig("git://foo.com")
     @short_material_type = 'git'
