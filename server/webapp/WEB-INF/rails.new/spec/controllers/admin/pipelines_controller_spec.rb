@@ -16,7 +16,7 @@
 
 require 'spec_helper'
 
-describe Admin::PipelinesController do
+describe Admin::PipelinesController, :ignore_before_filters => true do
   before do
     controller.stub(:populate_health_messages)
     controller.stub(:pipeline_pause_service).with().and_return(@pipeline_pause_service = double('Pipeline Pause Service'))

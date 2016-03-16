@@ -16,7 +16,7 @@
 
 require 'spec_helper'
 
-describe Admin::JobsController do
+describe Admin::JobsController, :ignore_before_filters => false do
   include ConfigSaveStubbing
   include MockRegistryModule
   include TaskMother

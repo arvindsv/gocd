@@ -17,11 +17,10 @@
 require 'spec_helper'
 
 
-describe Admin::JobsController, "view" do
+describe Admin::JobsController, :ignore_before_filters => true do
   include GoUtil
   describe "actions" do
     render_views
-
 
     before do
       controller.stub(:populate_config_validity)
@@ -41,6 +40,12 @@ describe Admin::JobsController, "view" do
         controller.instance_variable_set('@pipeline', @pipeline)
       end
 
+      allow(controller.pipeline_pause_service).to receive(:pipelinePauseInfo).with("pipeline-name").and_return(PipelinePauseInfo::notPaused)
+      allow(controller.system_environment).to receive(:isServerActive).and_return(true)
+      allow(controller.version_info_service).to receive(:isGOUpdateCheckEnabled).and_return(false)
+      allow(controller.security_service).to receive(:canViewAdminPage).and_return(false)
+
+      allow(controller.flash_message_service).to receive(:get).with('notice').and_return(nil)
     end
 
     describe "edit settings" do
@@ -54,8 +59,13 @@ describe Admin::JobsController, "view" do
     describe "edit artifacts" do
       include FormUI
 
+      before :each do
+        setup_localized_msg_for :key => 'ARTIFACTS', :value => 'Artifacts'
+      end
+
       it "should display artifacts title, instruction and list of artifacts" do
         get :edit,:stage_parent=> "pipelines", :current_tab => "artifacts", :pipeline_name => @pipeline.name().to_s, :stage_name => @pipeline.get(0).name().to_s, :job_name => @pipeline.get(0).getJobs().get(0).name().to_s
+
         expect(response.status).to eq(200)
         expect(response.body).to have_selector("h3", :text=>"Artifacts")
 

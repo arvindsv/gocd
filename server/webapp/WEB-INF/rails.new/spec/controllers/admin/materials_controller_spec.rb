@@ -16,10 +16,12 @@
 
 require 'spec_helper'
 
-describe Admin::MaterialsController do
+describe Admin::MaterialsController, :ignore_before_filters => true do
   include MockRegistryModule
+
   before do
-    controller.stub(:populate_health_messages)
+    stub_url_for_in_application_controller
+    allow(stub_localized_result).to receive(:message).with(controller.localizer).and_return("some_message")
   end
 
   include ConfigSaveStubbing
@@ -36,20 +38,16 @@ describe Admin::MaterialsController do
 
   describe :index do
     before :each do
-      @go_config_service = stub_service(:go_config_service)
-      @pipeline_pause_service = stub_service(:pipeline_pause_service)
       @pause_info = PipelinePauseInfo.paused("just for fun", "loser")
       @pipeline_name = "pipeline-name"
-      @pipeline_pause_service.should_receive(:pipelinePauseInfo).with(@pipeline_name).and_return(@pause_info)
-      @go_config_service.stub(:registry).and_return(MockRegistryModule::MockRegistry.new)
-      @go_config_service.should_receive(:checkConfigFileValid).and_return(GoConfigValidity.valid)
+      controller.pipeline_pause_service.should_receive(:pipelinePauseInfo).with(@pipeline_name).and_return(@pause_info)
       @cruise_config = double("Cruise Config")
       @cruise_config.should_receive(:name).and_return(@pipeline_name)
       a = double('config wrapper')
       a.should_receive(:getConfig).and_return(@cruise_config)
       a.should_receive(:getCruiseConfig).and_return(@cruise_config)
       a.should_receive(:getProcessedConfig).and_return(@cruise_config)
-      @go_config_service.should_receive(:loadForEdit).and_return(a)
+      controller.go_config_service.should_receive(:loadForEdit).and_return(a)
     end
 
     it "should set current tab param" do
@@ -63,7 +61,6 @@ describe Admin::MaterialsController do
   describe "delete" do
 
     before :each do
-      controller.stub(:populate_config_validity)
       @cruise_config = BasicCruiseConfig.new()
       @cruise_config_mother = GoConfigMother.new
       @material_config = GitMaterialConfig.new("http://git.thoughtworks.com")
@@ -77,11 +74,8 @@ describe Admin::MaterialsController do
       controller.stub(:current_user).and_return(@user)
       @result = stub_localized_result
 
-      @go_config_service = stub_service(:go_config_service)
-      @pipeline_pause_service = stub_service(:pipeline_pause_service)
       @pause_info = PipelinePauseInfo.paused("just for fun", "loser")
-      @pipeline_pause_service.should_receive(:pipelinePauseInfo).with("pipeline-name").and_return(@pause_info)
-      @go_config_service.stub(:registry).and_return(MockRegistryModule::MockRegistry.new)
+      controller.pipeline_pause_service.should_receive(:pipelinePauseInfo).with("pipeline-name").and_return(@pause_info)
     end
 
     it "should delete an existing material" do

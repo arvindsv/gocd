@@ -63,10 +63,13 @@ RSpec.configure do |config|
   config.before(:each, :ignore_before_filters => true) do
     ServiceCacheStrategy.instance[:use_stubs] = true
 
-    controller.stub(:populate_health_messages)
+    controller.stub(:populate_health_messages) do
+      controller.instance_variable_set(:@current_server_health_states, com.thoughtworks.go.serverhealth.ServerHealthStates.new)
+    end
     controller.stub(:populate_config_validity)
     controller.stub(:set_site_urls_in_thread)
     stub_localizer
+    ignore_flash_message_service
     controller.stub(:localizer)
     allow(controller.go_config_service).to receive(:registry).and_return(MockRegistryModule::MockRegistry.new)
   end

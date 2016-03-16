@@ -64,7 +64,7 @@ module ConfigSaveStubbing
 
   def stub_for_config_save_blah(cruise_config, options, subject_partial, update_partial, &blk)
     assertion_map = Thread.current[:assertion_map] = {}
-    @go_config_service.should_receive(:updateConfigFromUI) do |update_command, md5, user, result|
+    (@go_config_service || controller.go_config_service).should_receive(:updateConfigFromUI) do |update_command, md5, user, result|
       assertion_map[:md5] = md5
       assertion_map[:user] = user
       assertion_map[:result] = result

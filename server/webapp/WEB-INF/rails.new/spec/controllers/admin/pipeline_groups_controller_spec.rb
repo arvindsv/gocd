@@ -16,13 +16,15 @@
 
 require 'spec_helper'
 
-describe Admin::PipelineGroupsController do
+describe Admin::PipelineGroupsController, :ignore_before_filters => true do
   include MockRegistryModule
-  before do
-    controller.stub(:populate_health_messages)
-    controller.stub(:set_current_user)
-  end
   include ConfigSaveStubbing
+
+  before do
+    controller.stub(:set_current_user)
+    stub_url_for_in_application_controller
+    allow(stub_localized_result).to receive(:message).with(controller.localizer).and_return("some_message")
+  end
 
   describe "routes" do
     it "should resolve route to the pipeline groups listing page" do
@@ -94,17 +96,12 @@ describe Admin::PipelineGroupsController do
 
   describe :actions do
     before(:each) do
-      @go_config_service = stub_service(:go_config_service)
-      @pipeline_config_service = stub_service(:pipeline_config_service)
-      @go_config_service.stub(:checkConfigFileValid).and_return(com.thoughtworks.go.config.validation.GoConfigValidity.valid())
-      @security_service = stub_service(:security_service)
-      @security_service.stub(:isUserAdminOfGroup).and_return(true)
+      controller.security_service.stub(:isUserAdminOfGroup).and_return(true)
       @user = current_user
       @groups = PipelineConfigMother.createGroups(["group1", "group2", "group3"].to_java(java.lang.String))
       @config = BasicCruiseConfig.new(@groups.to_a.to_java(PipelineConfigs))
       group_for_edit = ConfigForEdit.new(@groups.get(0), @config, @config)
-      @go_config_service.stub(:loadGroupForEditing).and_return(group_for_edit)
-      @go_config_service.stub(:registry).and_return(MockRegistryModule::MockRegistry.new)
+      controller.go_config_service.stub(:loadGroupForEditing).and_return(group_for_edit)
     end
 
     after(:each) do
@@ -113,7 +110,7 @@ describe Admin::PipelineGroupsController do
 
     describe :new do
       it "should return a new pipeline group" do
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@config)
 
         get :new
 
@@ -125,7 +122,7 @@ describe Admin::PipelineGroupsController do
     describe :create do
 
       before do
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@config)
       end
 
       it "should create a new pipeline group with the given name" do
@@ -152,8 +149,8 @@ describe Admin::PipelineGroupsController do
 
     describe :index do
       before(:each) do
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@config)
-        @pipeline_config_service.should_receive(:canDeletePipelines).and_return({
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@config)
+        controller.pipeline_config_service.should_receive(:canDeletePipelines).and_return({
                 "pipeline_1" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
                 "pipeline_2" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
                 "pipeline_3" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
@@ -185,9 +182,9 @@ describe Admin::PipelineGroupsController do
       end
 
       it "should load groups visible to admin" do
-        @security_service.should_receive(:isUserAdminOfGroup).with(@user.getUsername(), "group1").and_return(true)
-        @security_service.should_receive(:isUserAdminOfGroup).with(@user.getUsername(), "group2").and_return(false)
-        @security_service.should_receive(:isUserAdminOfGroup).with(@user.getUsername(), "group3").and_return(true)
+        controller.security_service.should_receive(:isUserAdminOfGroup).with(@user.getUsername(), "group1").and_return(true)
+        controller.security_service.should_receive(:isUserAdminOfGroup).with(@user.getUsername(), "group2").and_return(false)
+        controller.security_service.should_receive(:isUserAdminOfGroup).with(@user.getUsername(), "group3").and_return(true)
 
         get :index
 
@@ -199,8 +196,8 @@ describe Admin::PipelineGroupsController do
 
       before :each do
         @pipeline = @groups.get(0).get(0)
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@config)
-        @pipeline_config_service.should_receive(:canDeletePipelines).and_return({
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@config)
+        controller.pipeline_config_service.should_receive(:canDeletePipelines).and_return({
                 "pipeline_1" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
                 "pipeline_2" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
                 "pipeline_3" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
@@ -249,11 +246,10 @@ describe Admin::PipelineGroupsController do
 
     describe :edit do
       before do
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@config)
         @group = @groups.get(0)
-        @user_service = stub_service(:user_service)
-        @user_service.stub(:allUsernames).and_return(["foo", "bar", "baz"])
-        @user_service.stub(:allRoleNames).and_return(["foo_role", "bar_role", "baz_role"])
+        controller.user_service.stub(:allUsernames).and_return(["foo", "bar", "baz"])
+        controller.user_service.stub(:allRoleNames).and_return(["foo_role", "bar_role", "baz_role"])
       end
 
       it "should load a pipeline group for editing" do
@@ -274,11 +270,10 @@ describe Admin::PipelineGroupsController do
 
     describe :show do
       before do
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@config)
         @group = @groups.get(0)
-        @user_service = stub_service(:user_service)
-        @user_service.stub(:allUsernames).and_return(["foo", "bar", "baz"])
-        @user_service.stub(:allRoleNames).and_return(["foo_role", "bar_role", "baz_role"])
+        controller.user_service.stub(:allUsernames).and_return(["foo", "bar", "baz"])
+        controller.user_service.stub(:allRoleNames).and_return(["foo_role", "bar_role", "baz_role"])
       end
 
       it "should load a pipeline group for editing" do
@@ -299,13 +294,15 @@ describe Admin::PipelineGroupsController do
 
     describe :update do
       before(:each) do
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@config)
         @group = @groups.get(0)
       end
 
       it "should save a pipeline_group" do
         stub_save_for_success(@config)
         stub_service(:flash_message_service).should_receive(:add).with(FlashMessageModel.new("Saved successfully.", "success")).and_return("random-message-uuid")
+        controller.user_service.stub(:allUsernames).and_return([])
+        controller.user_service.stub(:allRoleNames).and_return([])
 
         put :update, :group_name => "group1", :config_md5 => "1234abcd", :group => {PipelineConfigs::GROUP => "new_group_name"}
 
@@ -314,6 +311,8 @@ describe Admin::PipelineGroupsController do
       end
 
       it "should error out if group is not found with new config object attributes assigned" do
+        controller.user_service.stub(:allUsernames).and_return([])
+        controller.user_service.stub(:allRoleNames).and_return([])
         stub_save_for_validation_error(@config) do |result, config, node|
           result.notFound(LocalizedMessage.string("DELETE_TEMPLATE"), HealthStateType.general(HealthStateScope::GLOBAL))
         end
@@ -334,9 +333,8 @@ describe Admin::PipelineGroupsController do
       before do
         @result = stub_localized_result
         @pipeline = @groups.get(0).get(0)
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@config)
-        @pipeline_config_service = stub_service(:pipeline_config_service)
-        @pipeline_config_service.should_receive(:canDeletePipelines).and_return({
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@config)
+        controller.pipeline_config_service.should_receive(:canDeletePipelines).and_return({
                 "pipeline_1" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
                 "pipeline_2" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
                 "pipeline_3" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
@@ -368,8 +366,8 @@ describe Admin::PipelineGroupsController do
       before :each do
         @empty_group = PipelineConfigMother.createGroup("empty_group", [].to_java(java.lang.String))
         @destroy_group_config = BasicCruiseConfig.new(@empty_group.to_a.to_java(PipelineConfigs))
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@destroy_group_config)
-        @pipeline_config_service.should_receive(:canDeletePipelines).and_return({
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@destroy_group_config)
+        controller.pipeline_config_service.should_receive(:canDeletePipelines).and_return({
                 "pipeline_1" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
                 "pipeline_2" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
                 "pipeline_3" => CanDeleteResult.new(true, LocalizedMessage.string("CAN_DELETE_PIPELINE")),
@@ -391,8 +389,8 @@ describe Admin::PipelineGroupsController do
 
     describe :possible_groups do
       it "should render possible groups for given pipeline" do
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@config)
-        @go_config_service.should_receive(:doesMd5Match).with("my_md5").and_return(true)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@config)
+        controller.go_config_service.should_receive(:doesMd5Match).with("my_md5").and_return(true)
 
         get :possible_groups, :pipeline_name => "pipeline_1", :config_md5 => "my_md5"
 

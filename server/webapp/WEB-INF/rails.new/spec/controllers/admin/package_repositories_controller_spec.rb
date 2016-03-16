@@ -16,8 +16,13 @@
 
 require 'spec_helper'
 
-describe Admin::PackageRepositoriesController do
+describe Admin::PackageRepositoriesController, :ignore_before_filters => true do
   include MockRegistryModule, ConfigSaveStubbing
+
+  before :each do
+    stub_url_for_in_application_controller
+    allow(stub_localized_result).to receive(:message).with(controller.localizer).and_return("some_message")
+  end
 
   describe :routes do
     it "should resolve route to the new package-repositories page" do
@@ -79,14 +84,6 @@ describe Admin::PackageRepositoriesController do
   describe :actions do
 
     before :each do
-      config_validity = double('config validity')
-      config_validity.should_receive(:isValid).and_return(true)
-      @go_config_service = double('go config service')
-      controller.stub(:go_config_service).and_return(@go_config_service)
-      @go_config_service.should_receive(:checkConfigFileValid).and_return(config_validity)
-      @go_config_service.stub(:registry)
-      controller.stub(:populate_health_messages)
-
       @cloner = double('cloner')
       controller.stub(:get_cloner_instance).and_return(@cloner)
     end
@@ -95,7 +92,7 @@ describe Admin::PackageRepositoriesController do
       before(:each) do
         controller.stub(:package_repository_service).with().and_return(@package_repository_service= double('Package Repository Service'))
         @cruise_config = BasicCruiseConfig.new
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
         @cloner.should_receive(:deepClone).at_least(1).times.with(@cruise_config).and_return(@cruise_config)
         @user = current_user
       end
@@ -119,7 +116,7 @@ describe Admin::PackageRepositoriesController do
         controller.stub(:package_repository_service).with().and_return(@package_repository_service= double('Package Repository Service'))
         @cruise_config = BasicCruiseConfig.new
         @cloner.should_receive(:deepClone).at_least(1).times.with(@cruise_config).and_return(@cruise_config)
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
         @user = current_user
       end
 
@@ -140,7 +137,7 @@ describe Admin::PackageRepositoriesController do
     describe "config" do
       before(:each) do
         @cruise_config = BasicCruiseConfig.new
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
         @cloner.should_receive(:deepClone).at_least(1).times.with(@cruise_config).and_return(@cruise_config)
 
         repository1 = PackageRepositoryMother.create("repo1", "repo1-name", "pluginid", "version1.0", Configuration.new([ConfigurationPropertyMother.create("k1", false, "v1")].to_java(ConfigurationProperty)))
@@ -181,7 +178,7 @@ describe Admin::PackageRepositoriesController do
       before(:each) do
         controller.stub(:package_repository_service).with().and_return(@package_repository_service= double('Package Repository Service'))
         @cruise_config = BasicCruiseConfig.new
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
         @cloner.should_receive(:deepClone).at_least(1).times.with(@cruise_config).and_return(@cruise_config)
 
         @user = current_user
@@ -221,7 +218,7 @@ describe Admin::PackageRepositoriesController do
         @cruise_config = BasicCruiseConfig.new
         @cloner.should_receive(:deepClone).at_least(1).times.with(@cruise_config).and_return(@cruise_config)
 
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
         @user = current_user
         @repository1 = PackageRepositoryMother.create("abcd-1234", "repo1-name", "pluginid", "version1.0", Configuration.new([ConfigurationPropertyMother.create("k1", false, "v1")].to_java(ConfigurationProperty)))
         @repository2 = PackageRepositoryMother.create("with-missing-plugin", "repo2-name", "missing", "version1.0", Configuration.new([ConfigurationPropertyMother.create("k1", false, "v1")].to_java(ConfigurationProperty)))
@@ -248,6 +245,8 @@ describe Admin::PackageRepositoriesController do
       end
 
       it "should render error if plugin is missing package repository" do
+        setup_localized_msg_for :key => 'ASSOCIATED_PLUGIN_NOT_FOUND', :params => ['missing'], :value => 'Associated plugin not found'
+
         get :edit, :id => "with-missing-plugin"
 
         expect(assigns[:package_repository]).to eq(@repository2)
@@ -260,10 +259,11 @@ describe Admin::PackageRepositoriesController do
       end
 
       it "should render 404 page when repo is missing" do
+        setup_localized_msg_for :key => 'PACKAGE_REPOSITORY_NOT_FOUND', :params => ['missing-repo-id'], :value => 'Package repository not found'
         get :edit, :id => "missing-repo-id"
 
         expect(response.response_code).to eq(404)
-        expect(assigns[:message]).to eq("Could not find the repository with id 'missing-repo-id'. It might have been deleted.")
+        expect(assigns[:message]).to eq("Package repository not found")
         expect(assigns[:status]).to eq(404)
       end
     end
@@ -273,7 +273,7 @@ describe Admin::PackageRepositoriesController do
         controller.stub(:package_repository_service).with().and_return(@package_repository_service= double('Package Repository Service'))
         @cruise_config = BasicCruiseConfig.new
         @cloner.should_receive(:deepClone).at_least(1).times.with(@cruise_config).and_return(@cruise_config)
-        @go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
+        controller.go_config_service.should_receive(:getConfigForEditing).and_return(@cruise_config)
         @user = current_user
       end
 
@@ -352,7 +352,7 @@ describe Admin::PackageRepositoriesController do
       before :each do
         @cruise_config = double('cruise config')
         @cloner.should_receive(:deepClone).at_least(1).times.with(@cruise_config).and_return(@cruise_config)
-        @go_config_service.should_receive(:getConfigForEditing).at_least(1).times.and_return(@cruise_config)
+        controller.go_config_service.should_receive(:getConfigForEditing).at_least(1).times.and_return(@cruise_config)
         @config_md5 = "1234abcd"
 
         @update_response = double('update_response')
@@ -364,7 +364,7 @@ describe Admin::PackageRepositoriesController do
         @update_response.should_receive(:getSubject).and_return(@cruise_config)
         @update_response.should_receive(:configAfterUpdate).and_return(@cruise_config)
         @update_response.should_receive(:wasMerged).and_return(false)
-        @go_config_service.should_receive(:updateConfigFromUI).with(anything, @config_md5, an_instance_of(Username), an_instance_of(HttpLocalizedOperationResult)).and_return(@update_response)
+        controller.go_config_service.should_receive(:updateConfigFromUI).with(anything, @config_md5, an_instance_of(Username), an_instance_of(HttpLocalizedOperationResult)).and_return(@update_response)
         stub_service(:flash_message_service).should_receive(:add).with(FlashMessageModel.new("Saved successfully.", "success")).and_return("random-uuid")
 
         delete :destroy, :id => "repo-id", :config_md5 => @config_md5
@@ -389,7 +389,7 @@ describe Admin::PackageRepositoriesController do
         pipeline_groups.should_receive(:getPackageUsageInPipelines).and_return(nil)
         @cruise_config.should_receive(:getGroups).and_return(pipeline_groups)
         @cruise_config.should_receive(:getAllErrorsExceptFor).and_return([])
-        @go_config_service.should_receive(:updateConfigFromUI).with(anything, @config_md5, an_instance_of(Username), an_instance_of(HttpLocalizedOperationResult)) do |action, md5, user, r|
+        controller.go_config_service.should_receive(:updateConfigFromUI).with(anything, @config_md5, an_instance_of(Username), an_instance_of(HttpLocalizedOperationResult)) do |action, md5, user, r|
           r.badRequest(LocalizedMessage.string("SAVE_FAILED"))
         end.and_return(@update_response)
 

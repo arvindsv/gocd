@@ -54,11 +54,17 @@ module MiscSpecExtensions
     allow_any_instance_of(RailsLocalizer::L).to receive(:method_missing) do |method, *args|
       "LOC_#{method}_#{args[0]}"
     end
+    # allow_any_instance_of(RailsLocalizer::L).to receive(:string) do |key|
+    #   "DONT_CARE_ABOUT_#{key}"
+    # end
     controller.stub(:l).and_return(RailsLocalizer::L.new)
   end
 
-  def setup_localized_msg_for key, translation_value
-    allow(controller.l).to receive(:string).with(key).and_return(translation_value)
+  def setup_localized_msg_for options = {}
+    expected_params = [options[:key]]
+    expected_params = [eq(options[:key]), match_array(options[:params].to_java(java.lang.String))] if options.key?(:params)
+    STDERR.puts "Expecting: #{expected_params}"
+    allow_any_instance_of(RailsLocalizer::L).to receive(:string).with(*expected_params).and_return(options[:value])
   end
 
   def ignore_flash_message_service

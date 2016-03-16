@@ -20,7 +20,7 @@ describe Admin::ConfigurationController, :ignore_before_filters => true do
 
   before(:each) do
     allow(controller.go_config_service).to receive(:registry).and_return(MockRegistryModule::MockRegistry.new)
-    setup_localized_msg_for 'ADMINISTRATION', 'Administration'
+    setup_localized_msg_for :key => 'ADMINISTRATION', :value => 'Administration'
   end
 
   describe "tab_name" do
@@ -124,7 +124,7 @@ describe Admin::ConfigurationController, :ignore_before_filters => true do
     it "should update the configuration" do
       param_map = {"content" => "config_content", "md5" => "md5"}
       controller.admin_service.should_receive(:updateConfig).with(param_map, an_instance_of(HttpLocalizedOperationResult)).and_return(GoConfigValidity::valid())
-      setup_localized_msg_for 'SAVED_SUCCESSFULLY', 'Saved successfully.'
+      setup_localized_msg_for :key => 'SAVED_SUCCESSFULLY', :value => 'Saved successfully.'
 
       put :update, :go_config => param_map
 
@@ -143,7 +143,7 @@ describe Admin::ConfigurationController, :ignore_before_filters => true do
       controller.admin_service.should_receive(:updateConfig).with(submitted_copy, an_instance_of(HttpLocalizedOperationResult)).and_return(config_validity)
       cruise_config_revision = double('cruise config revision')
       controller.config_repository.should_receive(:getRevision).with(submitted_copy['md5']).and_return(cruise_config_revision)
-      setup_localized_msg_for 'SAVE_FAILED', 'Save failed, see errors below'
+      setup_localized_msg_for :key => 'SAVE_FAILED', :value => 'Save failed, see errors below'
 
       put :update, {:go_config => submitted_copy}
 
@@ -168,9 +168,9 @@ describe Admin::ConfigurationController, :ignore_before_filters => true do
       cruise_config_revision = double('cruise config revision')
       controller.config_repository.should_receive(:getRevision).with(current_config['md5']).and_return(cruise_config_revision)
 
-      setup_localized_msg_for 'FLASH_MESSAGE_ON_CONFLICT', 'Configuration conflict'
-      setup_localized_msg_for 'SAVE_FAILED', 'Save failed, see errors below'
-      setup_localized_msg_for 'HELP_LINK_CONFIGURATION_REFERENCE', 'Help link details ...'
+      setup_localized_msg_for :key => 'FLASH_MESSAGE_ON_CONFLICT', :value => 'Configuration conflict'
+      setup_localized_msg_for :key => 'SAVE_FAILED', :value => 'Save failed, see errors below'
+      setup_localized_msg_for :key => 'HELP_LINK_CONFIGURATION_REFERENCE', :value => 'Help link details ...'
 
       put :update, {:go_config => submitted_copy}
 
@@ -193,8 +193,8 @@ describe Admin::ConfigurationController, :ignore_before_filters => true do
       config_validity.should_receive(:isValid).and_return(true)
       config_validity.should_receive(:wasMerged).and_return(true)
       controller.admin_service.should_receive(:updateConfig).with(submitted_copy, an_instance_of(HttpLocalizedOperationResult)).and_return(config_validity)
-      setup_localized_msg_for 'SAVED_SUCCESSFULLY', 'Saved successfully.'
-      setup_localized_msg_for 'CONFIG_MERGED', 'The configuration was modified by someone else, but your changes were merged successfully.'
+      setup_localized_msg_for :key => 'SAVED_SUCCESSFULLY', :value => 'Saved successfully.'
+      setup_localized_msg_for :key => 'CONFIG_MERGED', :value => 'The configuration was modified by someone else, but your changes were merged successfully.'
 
       put :update, {:go_config => submitted_copy}
 

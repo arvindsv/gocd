@@ -16,9 +16,15 @@
 
 require 'spec_helper'
 
-describe Admin::PackageDefinitionsController do
+describe Admin::PackageDefinitionsController, :ignore_before_filters => true do
   include ConfigSaveStubbing
   include MockRegistryModule
+
+  before :each do
+    stub_url_for_in_application_controller
+    allow(@stubbed_result = stub_localized_result).to receive(:message).with(controller.localizer).and_return("some_message")
+  end
+
   describe "routes" do
     it "should resolve route to the new package_definitions page" do
       {:get => "/admin/package_definitions/repoid/new"}.should route_to(:controller => "admin/package_definitions", :action => "new", :repo_id => "repoid")
@@ -96,16 +102,19 @@ describe Admin::PackageDefinitionsController do
 
       it "should render error for invalid plugin" do
         @package_metadata_store.should_receive(:getMetadata).with("invalid-pluginid").and_return(nil)
+        setup_localized_msg_for :key => 'ASSOCIATED_PLUGIN_NOT_FOUND', :params => ['invalid-pluginid'], :value => 'Associated plugin not found.'
 
         get :show, :repo_id => "repo2", :package_id => "pkg4"
 
-        assigns[:errors].should == "Associated plugin 'invalid-pluginid' not found. Please contact the Go admin to install the plugin."
+        assigns[:errors].should == "Associated plugin not found."
       end
 
       it "should render error if repository not found" do
+        setup_localized_msg_for :key => 'PACKAGE_REPOSITORY_NOT_FOUND', :params => ['deleted-repo'], :value => 'Could not find repo. It might have been deleted.'
+
         get :show, :repo_id => "deleted-repo", :package_id => "pkg4"
 
-        assigns[:errors].should == "Could not find the repository with id 'deleted-repo'. It might have been deleted."
+        assigns[:errors].should == "Could not find repo. It might have been deleted."
       end
     end
 
@@ -124,16 +133,19 @@ describe Admin::PackageDefinitionsController do
 
       it "should render error for invalid plugin" do
         @package_metadata_store.should_receive(:getMetadata).with("invalid-pluginid").and_return(nil)
+        setup_localized_msg_for :key => 'ASSOCIATED_PLUGIN_NOT_FOUND', :params => ['invalid-pluginid'], :value => 'Associated plugin not found.'
 
         get :show_for_new_pipeline_wizard, :repo_id => "repo2", :package_id => "pkg4"
 
-        assigns[:errors].should == "Associated plugin 'invalid-pluginid' not found. Please contact the Go admin to install the plugin."
+        assigns[:errors].should == 'Associated plugin not found.'
       end
 
       it "should render error if repository not found" do
+        setup_localized_msg_for :key => 'PACKAGE_REPOSITORY_NOT_FOUND', :params => ['deleted-repo'], :value => 'Could not find the repository.'
+
         get :show_for_new_pipeline_wizard, :repo_id => "deleted-repo", :package_id => "pkg4"
 
-        assigns[:errors].should == "Could not find the repository with id 'deleted-repo'. It might have been deleted."
+        assigns[:errors].should == 'Could not find the repository.'
       end
     end
 
@@ -154,30 +166,40 @@ describe Admin::PackageDefinitionsController do
 
       it "should render error for invalid plugin" do
         @package_metadata_store.should_receive(:getMetadata).with("invalid-pluginid").and_return(nil)
+        setup_localized_msg_for :key => 'ASSOCIATED_PLUGIN_NOT_FOUND', :params => ['invalid-pluginid'], :value => 'Associated plugin not found.'
 
         get :show_with_repository_list, :repo_id => "repo2", :package_id => "pkg4"
 
-        assigns[:errors].should == "Associated plugin 'invalid-pluginid' not found. Please contact the Go admin to install the plugin."
+        assigns[:errors].should == 'Associated plugin not found.'
       end
 
       it "should render 404 when repo is missing" do
+        setup_localized_msg_for :key => 'PACKAGE_NOT_FOUND', :params => ['pkg4', 'repo3'], :value => 'Could not find package.'
+
         get :show_with_repository_list, :repo_id => "repo3", :package_id => "pkg4"
+
         response.response_code.should == 404
-        assigns[:message].should == "Could not find package id 'pkg4' under repository with id 'repo3'. It might have been deleted."
+        assigns[:message].should == 'Could not find package.'
         assigns[:status].should == 404
       end
 
       it "should render 404 when package is missing" do
+        setup_localized_msg_for :key => 'PACKAGE_NOT_FOUND', :params => ['pkg5', 'repo2'], :value => 'Could not find package.'
+
         get :show_with_repository_list, :repo_id => "repo2", :package_id => "pkg5"
+
         response.response_code.should == 404
-        assigns[:message].should == "Could not find package id 'pkg5' under repository with id 'repo2'. It might have been deleted."
+        assigns[:message].should == 'Could not find package.'
         assigns[:status].should == 404
       end
 
       it "should render package configuration with just name when plugin is missing" do
         @package_metadata_store.should_receive(:getMetadata).with("invalid-pluginid").and_return(nil)
+        setup_localized_msg_for :key => 'ASSOCIATED_PLUGIN_NOT_FOUND', :params => ['invalid-pluginid'], :value => 'Associated plugin not found.'
+
         get :show_with_repository_list, :repo_id => "repo2", :package_id => "pkg4"
-        assigns[:errors].should == "Associated plugin 'invalid-pluginid' not found. Please contact the Go admin to install the plugin."
+
+        assigns[:errors].should == 'Associated plugin not found.'
         assigns[:package_configuration].name == "yum"
         assigns[:package_configuration].properties.size.should == 0
       end
@@ -226,16 +248,19 @@ describe Admin::PackageDefinitionsController do
 
       it "should render error for invalid plugin" do
         @package_metadata_store.should_receive(:getMetadata).with("invalid-pluginid").and_return(nil)
+        setup_localized_msg_for :key => 'ASSOCIATED_PLUGIN_NOT_FOUND', :params => ['invalid-pluginid'], :value => 'Associated plugin not found.'
 
         get :new, :repo_id => "repo2"
 
-        assigns[:errors].should == "Associated plugin 'invalid-pluginid' not found. Please contact the Go admin to install the plugin."
+        assigns[:errors].should == "Associated plugin not found."
       end
 
       it "should render error if repository not found" do
+        setup_localized_msg_for :key => 'PACKAGE_REPOSITORY_NOT_FOUND', :params => ['deleted-repo'], :value => 'Could not find repo. It might have been deleted.'
+
         get :new, :repo_id => "deleted-repo"
 
-        assigns[:errors].should == "Could not find the repository with id 'deleted-repo'. It might have been deleted."
+        assigns[:errors].should == "Could not find repo. It might have been deleted."
       end
     end
 
@@ -256,16 +281,19 @@ describe Admin::PackageDefinitionsController do
 
       it "should render error for invalid plugin" do
         @package_metadata_store.should_receive(:getMetadata).with("invalid-pluginid").and_return(nil)
+        setup_localized_msg_for :key => 'ASSOCIATED_PLUGIN_NOT_FOUND', :params => ['invalid-pluginid'], :value => 'Associated plugin not found.'
 
         get :new_for_new_pipeline_wizard, :repo_id => "repo2"
 
-        assigns[:errors].should == "Associated plugin 'invalid-pluginid' not found. Please contact the Go admin to install the plugin."
+        assigns[:errors].should == 'Associated plugin not found.'
       end
 
       it "should render error if repository not found" do
+        setup_localized_msg_for :key => 'PACKAGE_REPOSITORY_NOT_FOUND', :params => ['deleted-repo'], :value => 'Could not find the repository.'
+
         get :new_for_new_pipeline_wizard, :repo_id => "deleted-repo"
 
-        assigns[:errors].should == "Could not find the repository with id 'deleted-repo'. It might have been deleted."
+        assigns[:errors].should == 'Could not find the repository.'
       end
     end
 
@@ -319,6 +347,7 @@ describe Admin::PackageDefinitionsController do
           # we don't really care about the error itself. Just the fact that an error occurred. Hence the PACKAGE_CHECK_FAILED error being used here. (Sachin)
           r.badRequest(LocalizedMessage.string("PACKAGE_CHECK_FAILED", "foo"))
         end
+        allow(@stubbed_result).to receive(:message).with(controller.localizer).and_return("Package check Failed. Reason(s): foo")
 
         get :check_connection, :material => pkg_params
 
