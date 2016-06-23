@@ -17,6 +17,8 @@ package com.thoughtworks.go.domain.cctray;
 
 import com.thoughtworks.go.config.*;
 import com.thoughtworks.go.config.security.GoConfigPipelinePermissionsAuthority;
+import com.thoughtworks.go.config.security.Permissions;
+import com.thoughtworks.go.config.security.users.NoOne;
 import com.thoughtworks.go.domain.activity.ProjectStatus;
 import com.thoughtworks.go.config.security.users.AllowedUsers;
 import com.thoughtworks.go.config.security.users.Users;
@@ -27,10 +29,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static com.thoughtworks.go.util.DataStructureUtils.m;
 import static com.thoughtworks.go.util.DataStructureUtils.s;
@@ -229,7 +228,11 @@ public class CcTrayConfigChangeHandlerTest {
         when(cache.get("pipeline1 :: stage1 :: job1")).thenReturn(pipeline1_stage1_job);
         when(cache.get("pipeline2 :: stage2")).thenReturn(pipeline2_stage2);
         when(cache.get("pipeline2 :: stage2 :: job2")).thenReturn(pipeline2_stage2_job);
-        when(pipelinePermissionsAuthority.groupsAndTheirViewers()).thenReturn(m("group1", viewers("user1", "user2"), "group2", viewers("user3")));
+
+        Map<CaseInsensitiveString, Permissions> expectedPermissions = new HashMap<>();
+        expectedPermissions.put(new CaseInsensitiveString("pipeline1"), new Permissions(viewers("user1", "user2"), null, null));
+        expectedPermissions.put(new CaseInsensitiveString("pipeline2"), new Permissions(viewers("user3"), null, null));
+        when(pipelinePermissionsAuthority.pipelinesAndTheirPermissions()).thenReturn(expectedPermissions);
 
         CruiseConfig config = GoConfigMother.defaultCruiseConfig();
         goConfigMother.addPipelineWithGroup(config, "group2", "pipeline2", "stage2", "job2");
@@ -304,7 +307,11 @@ public class CcTrayConfigChangeHandlerTest {
         ProjectStatus statusOfPipeline1JobInCache = new ProjectStatus(pipeline1job, "OldActivity-Job", "OldStatus-Job", "OldLabel-Job", new Date(), "p1-job-url");
         when(cache.get(pipeline1Stage)).thenReturn(statusOfPipeline1StageInCache);
         when(cache.get(pipeline1job)).thenReturn(statusOfPipeline1JobInCache);
-        when(pipelinePermissionsAuthority.groupsAndTheirViewers()).thenReturn(m("group1", viewers("user1", "user2"), "group2", viewers("user3")));
+
+        Map<CaseInsensitiveString, Permissions> expectedPermissions = new HashMap<>();
+        expectedPermissions.put(new CaseInsensitiveString("pipeline1"), new Permissions(viewers("user1", "user2"), null, null));
+        expectedPermissions.put(new CaseInsensitiveString("pipeline2"), new Permissions(viewers("user3"), null, null));
+        when(pipelinePermissionsAuthority.pipelinesAndTheirPermissions()).thenReturn(expectedPermissions);
 
         PipelineConfig pipeline1Config = GoConfigMother.pipelineHavingJob("pipeline1", "stage1", "job1", "arts", "dir").pipelineConfigByName(new CaseInsensitiveString("pipeline1"));
 
