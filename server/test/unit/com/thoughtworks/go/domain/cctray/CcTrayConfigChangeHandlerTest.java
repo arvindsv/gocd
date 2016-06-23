@@ -1,11 +1,11 @@
 /*
- * Copyright 2015 ThoughtWorks, Inc.
+ * Copyright 2017 ThoughtWorks, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,10 @@
 package com.thoughtworks.go.domain.cctray;
 
 import com.thoughtworks.go.config.*;
+import com.thoughtworks.go.config.security.GoConfigPipelinePermissionsAuthority;
 import com.thoughtworks.go.domain.activity.ProjectStatus;
-import com.thoughtworks.go.domain.cctray.viewers.AllowedViewers;
-import com.thoughtworks.go.domain.cctray.viewers.Viewers;
+import com.thoughtworks.go.config.security.viewers.AllowedViewers;
+import com.thoughtworks.go.config.security.viewers.Viewers;
 import com.thoughtworks.go.helper.GoConfigMother;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class CcTrayConfigChangeHandlerTest {
     @Mock
     private CcTrayStageStatusLoader stageStatusLoader;
     @Mock
-    private CcTrayViewAuthority ccTrayViewAuthority;
+    private GoConfigPipelinePermissionsAuthority pipelinePermissionsAuthority;
     @Captor
     ArgumentCaptor<List<ProjectStatus>> statusesCaptor;
 
@@ -56,7 +57,7 @@ public class CcTrayConfigChangeHandlerTest {
     public void setUp() throws Exception {
         initMocks(this);
         goConfigMother = new GoConfigMother();
-        handler = new CcTrayConfigChangeHandler(cache, stageStatusLoader, ccTrayViewAuthority);
+        handler = new CcTrayConfigChangeHandler(cache, stageStatusLoader, pipelinePermissionsAuthority);
     }
 
     @Test
@@ -228,7 +229,7 @@ public class CcTrayConfigChangeHandlerTest {
         when(cache.get("pipeline1 :: stage1 :: job1")).thenReturn(pipeline1_stage1_job);
         when(cache.get("pipeline2 :: stage2")).thenReturn(pipeline2_stage2);
         when(cache.get("pipeline2 :: stage2 :: job2")).thenReturn(pipeline2_stage2_job);
-        when(ccTrayViewAuthority.groupsAndTheirViewers()).thenReturn(m("group1", viewers("user1", "user2"), "group2", viewers("user3")));
+        when(pipelinePermissionsAuthority.groupsAndTheirViewers()).thenReturn(m("group1", viewers("user1", "user2"), "group2", viewers("user3")));
 
         CruiseConfig config = GoConfigMother.defaultCruiseConfig();
         goConfigMother.addPipelineWithGroup(config, "group2", "pipeline2", "stage2", "job2");
@@ -303,7 +304,7 @@ public class CcTrayConfigChangeHandlerTest {
         ProjectStatus statusOfPipeline1JobInCache = new ProjectStatus(pipeline1job, "OldActivity-Job", "OldStatus-Job", "OldLabel-Job", new Date(), "p1-job-url");
         when(cache.get(pipeline1Stage)).thenReturn(statusOfPipeline1StageInCache);
         when(cache.get(pipeline1job)).thenReturn(statusOfPipeline1JobInCache);
-        when(ccTrayViewAuthority.groupsAndTheirViewers()).thenReturn(m("group1", viewers("user1", "user2"), "group2", viewers("user3")));
+        when(pipelinePermissionsAuthority.groupsAndTheirViewers()).thenReturn(m("group1", viewers("user1", "user2"), "group2", viewers("user3")));
 
         PipelineConfig pipeline1Config = GoConfigMother.pipelineHavingJob("pipeline1", "stage1", "job1", "arts", "dir").pipelineConfigByName(new CaseInsensitiveString("pipeline1"));
 
