@@ -20,8 +20,8 @@ import com.thoughtworks.go.domain.JobInstance;
 import com.thoughtworks.go.domain.NullStage;
 import com.thoughtworks.go.domain.Stage;
 import com.thoughtworks.go.domain.activity.ProjectStatus;
-import com.thoughtworks.go.config.security.users.AllowedViewers;
-import com.thoughtworks.go.config.security.users.Viewers;
+import com.thoughtworks.go.config.security.users.AllowedUsers;
+import com.thoughtworks.go.config.security.users.Users;
 import com.thoughtworks.go.helper.JobInstanceMother;
 import com.thoughtworks.go.helper.StageMother;
 import org.junit.Before;
@@ -155,7 +155,7 @@ public class CcTrayStageStatusChangeHandlerTest {
 
     @Test
     public void shouldReuseViewersListFromExistingStatusWhenCreatingNewStatus() throws Exception {
-        Viewers viewers = viewers("viewer1", "viewer2");
+        Users viewers = viewers("viewer1", "viewer2");
 
         String projectName = "pipeline :: stage1";
         ProjectStatus existingStageStatus = new ProjectStatus(projectName, "OldActivity", "OldStatus", "OldLabel", new Date(), webUrlFor("stage1"));
@@ -209,7 +209,7 @@ public class CcTrayStageStatusChangeHandlerTest {
         return "some-path/pipelines/pipeline/1/" + stageName + "/1";
     }
 
-    private Viewers viewers(String... users) {
-        return new AllowedViewers(s(users));
+    private Users viewers(String... users) {
+        return new AllowedUsers(s(users));
     }
 }

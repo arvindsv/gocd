@@ -22,10 +22,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 /* Understands: The set of users it has. */
-public class AllowedViewers implements Viewers {
+public class AllowedUsers implements Users {
     private Set<String> allowedUsers = new HashSet<>();
 
-    public AllowedViewers(Set<String> allowedUsers) {
+    public AllowedUsers(Set<String> allowedUsers) {
         for (String user : allowedUsers) {
             this.allowedUsers.add(user.toLowerCase());
         }
@@ -41,7 +41,7 @@ public class AllowedViewers implements Viewers {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AllowedViewers that = (AllowedViewers) o;
+        AllowedUsers that = (AllowedUsers) o;
 
         return allowedUsers.equals(that.allowedUsers);
     }

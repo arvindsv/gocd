@@ -19,8 +19,8 @@ package com.thoughtworks.go.config.security;
 import com.thoughtworks.go.config.Authorization;
 import com.thoughtworks.go.config.CruiseConfig;
 import com.thoughtworks.go.config.PipelineConfigs;
-import com.thoughtworks.go.config.security.users.AllowedViewers;
-import com.thoughtworks.go.config.security.users.Viewers;
+import com.thoughtworks.go.config.security.users.AllowedUsers;
+import com.thoughtworks.go.config.security.users.Users;
 import com.thoughtworks.go.helper.GoConfigMother;
 import com.thoughtworks.go.server.service.GoConfigService;
 import org.junit.Before;
@@ -58,7 +58,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addUserAsSuperAdmin(config, "superadmin1");
         configMother.addUserAsSuperAdmin(config, "superadmin2");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(1));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("superadmin1", "superadmin2", "viewer1")));
@@ -74,7 +74,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addRoleAsSuperAdmin(config, "superadminrole1");
         configMother.addRoleAsSuperAdmin(config, "superadminrole2");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(1));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("superadmin1", "superadmin2", "superadmin3", "viewer1")));
@@ -89,7 +89,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addRole(config, configMother.createRole("superadminrole1", "superadmin1", "superadmin2"));
         configMother.addRoleAsSuperAdmin(config, "superadminrole1");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(1));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("superadmin1", "superadmin2", "viewer1")));
@@ -104,7 +104,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addAdminUserForPipelineGroup(config, "groupadmin1", "group1");
         configMother.addAdminUserForPipelineGroup(config, "groupadmin2", "group1");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(2));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("groupadmin1", "groupadmin2")));
@@ -122,7 +122,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addAdminRoleForPipelineGroup(config, "group1_admin_role1", "group1");
         configMother.addAdminRoleForPipelineGroup(config, "group1_admin_role2", "group1");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(2));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("groupadmin1", "groupadmin2", "groupadmin3")));
@@ -137,7 +137,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addAdminUserForPipelineGroup(config, "groupadmin1", "group1");
         configMother.addAdminRoleForPipelineGroup(config, "group1_admin_role1", "group1");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(1));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("groupadmin1", "groupadmin2")));
@@ -152,7 +152,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addUserAsViewerOfPipelineGroup(config, "viewer2", "group1");
         configMother.addUserAsViewerOfPipelineGroup(config, "viewer3", "group2");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(2));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("viewer1", "viewer2")));
@@ -170,7 +170,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addRoleAsViewerOfPipelineGroup(config, "group1_view_role1", "group1");
         configMother.addRoleAsViewerOfPipelineGroup(config, "group1_view_role2", "group1");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(2));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("groupviewer1", "groupviewer2", "groupviewer3")));
@@ -185,7 +185,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addUserAsViewerOfPipelineGroup(config, "viewer1", "group1");
         configMother.addRoleAsViewerOfPipelineGroup(config, "group1_view_role1", "group1");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(1));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("viewer1", "groupviewer2")));
@@ -207,7 +207,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addRole(config, configMother.createRole("group3_view_role1", "group3viewer1", "group3viewer2"));
         configMother.addRoleAsViewerOfPipelineGroup(config, "group3_view_role1", "group3");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(3));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("superadmin1", "group1admin1", "group1admin2")));
@@ -231,7 +231,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         configMother.addRole(config, configMother.createRole("group3_view_role1", "user2", "user3"));
         configMother.addRoleAsViewerOfPipelineGroup(config, "group3_view_role1", "group3");
 
-        Map<String, Viewers> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
+        Map<String, Users> pipelinesAndTheirViewers = getGroupsAndTheirViewers();
 
         assertThat(pipelinesAndTheirViewers.size(), is(3));
         assertThat(pipelinesAndTheirViewers.get("group1"), is(viewers("superadmin1", "user1", "user2")));
@@ -246,7 +246,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         PipelineConfigs group = config.findGroup("group1");
         assertThat(group.getAuthorization(), is(new Authorization()));
 
-        Viewers viewersOfGroup1 = getGroupsAndTheirViewers().get("group1");
+        Users viewersOfGroup1 = getGroupsAndTheirViewers().get("group1");
 
         assertThat(viewersOfGroup1.contains("some-user"), is(true));
         assertThat(viewersOfGroup1.contains("some-other-user"), is(true));
@@ -261,7 +261,7 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         PipelineConfigs group = config.findGroup("group1");
         assertThat(group.getAuthorization(), is(new Authorization()));
 
-        Viewers viewersOfGroup1 = getGroupsAndTheirViewers().get("group1");
+        Users viewersOfGroup1 = getGroupsAndTheirViewers().get("group1");
 
         assertThat(viewersOfGroup1.contains("superadmin1"), is(true));
         assertThat(viewersOfGroup1.contains("some-user"), is(true));
@@ -277,21 +277,21 @@ public class GoConfigPipelinePermissionsAuthorityTest {
         PipelineConfigs group = config.findGroup("group1");
         assertThat(group.getAuthorization(), is(not(new Authorization())));
 
-        Viewers viewersOfGroup1 = getGroupsAndTheirViewers().get("group1");
+        Users viewersOfGroup1 = getGroupsAndTheirViewers().get("group1");
 
         assertThat(viewersOfGroup1.contains("groupadmin1"), is(true));
         assertThat(viewersOfGroup1.contains("some-user"), is(false));
         assertThat(viewersOfGroup1.contains("some-other-user"), is(false));
     }
 
-    private Map<String, Viewers> getGroupsAndTheirViewers() {
+    private Map<String, Users> getGroupsAndTheirViewers() {
         when(configService.security()).thenReturn(config.server().security());
         when(configService.groups()).thenReturn(config.getGroups());
 
         return service.groupsAndTheirViewers();
     }
 
-    private Viewers viewers(String... users) {
-        return new AllowedViewers(s(users));
+    private Users viewers(String... users) {
+        return new AllowedUsers(s(users));
     }
 }

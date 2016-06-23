@@ -18,8 +18,8 @@ package com.thoughtworks.go.domain.cctray;
 import com.thoughtworks.go.config.*;
 import com.thoughtworks.go.config.security.GoConfigPipelinePermissionsAuthority;
 import com.thoughtworks.go.domain.activity.ProjectStatus;
-import com.thoughtworks.go.config.security.users.AllowedViewers;
-import com.thoughtworks.go.config.security.users.Viewers;
+import com.thoughtworks.go.config.security.users.AllowedUsers;
+import com.thoughtworks.go.config.security.users.Users;
 import com.thoughtworks.go.helper.GoConfigMother;
 import org.junit.Before;
 import org.junit.Test;
@@ -324,8 +324,8 @@ public class CcTrayConfigChangeHandlerTest {
     }
 
 
-    private Viewers viewers(String... users) {
-        return new AllowedViewers(s(users));
+    private Users viewers(String... users) {
+        return new AllowedUsers(s(users));
     }
 
     private PipelineConfig pipelineConfigFor(CruiseConfig config, String pipelineName) {
