@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 ThoughtWorks, Inc.
+ * Copyright 2017 ThoughtWorks, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.thoughtworks.go.plugin.infra.commons.PluginsZip;
 import com.thoughtworks.go.plugin.infra.monitor.DefaultPluginJarLocationMonitor;
 import com.thoughtworks.go.server.cronjob.GoDiskSpaceMonitor;
 import com.thoughtworks.go.server.dao.PipelineSqlMapDao;
+import com.thoughtworks.go.server.dashboard.GoDashboardActivityListener;
 import com.thoughtworks.go.server.domain.PipelineTimeline;
 import com.thoughtworks.go.server.materials.DependencyMaterialUpdateNotifier;
 import com.thoughtworks.go.server.materials.MaterialUpdateService;
@@ -80,6 +81,7 @@ public class ApplicationInitializer implements ApplicationListener<ContextRefres
     @Autowired private RailsAssetsService railsAssetsService;
     @Autowired private FeatureToggleService featureToggleService;
     @Autowired private CcTrayActivityListener ccTrayActivityListener;
+    @Autowired private GoDashboardActivityListener dashboardActivityListener;
     @Autowired private ServerVersionInfoManager serverVersionInfoManager;
     @Autowired private EntityHashingService entityHashingService;
     @Autowired private DependencyMaterialUpdateNotifier dependencyMaterialUpdateNotifier;
@@ -137,6 +139,7 @@ public class ApplicationInitializer implements ApplicationListener<ContextRefres
             backupService.initialize();
             railsAssetsService.initialize();
             ccTrayActivityListener.initialize();
+            dashboardActivityListener.initialize();
 
             ServletHelper.init();
             // initialize static accessors
