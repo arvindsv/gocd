@@ -70,7 +70,6 @@ import java.util.*;
 import static com.thoughtworks.go.helper.ConfigFileFixture.configWith;
 import static com.thoughtworks.go.helper.PipelineConfigMother.createGroup;
 import static com.thoughtworks.go.helper.PipelineConfigMother.pipelineConfig;
-import static com.thoughtworks.go.helper.PipelineTemplateConfigMother.createTemplate;
 import static java.lang.String.format;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
@@ -595,7 +594,7 @@ public class GoConfigServiceTest {
         PipelineConfig down2 = GoConfigMother.createPipelineConfigWithMaterialConfig("down2", new DependencyMaterialConfig(new CaseInsensitiveString("blahPipeline"), new CaseInsensitiveString("blahStage")));
         when(goConfigDao.load()).thenReturn(configWith(
                 up, down1, down2, GoConfigMother.createPipelineConfigWithMaterialConfig("otherPipeline", new DependencyMaterialConfig(new CaseInsensitiveString("someotherpipeline"),
-                new CaseInsensitiveString("blahStage")))
+                        new CaseInsensitiveString("blahStage")))
         ));
 
         assertThat(goConfigService.downstreamPipelinesOf("blahPipeline"), is(Arrays.asList(down1, down2)));
@@ -1073,7 +1072,7 @@ public class GoConfigServiceTest {
     }
 
     @Test
-    public void badConfigShouldContainOldMD5_WhenConfigUpdateFailed(){
+    public void badConfigShouldContainOldMD5_WhenConfigUpdateFailed() {
         when(goConfigDao.updateConfig(org.mockito.Matchers.<UpdateConfigCommand>any())).thenThrow(new RuntimeException(getGoConfigInvalidException()));
         ConfigUpdateResponse configUpdateResponse = goConfigService.updateConfigFromUI(mock(UpdateConfigFromUI.class), "old-md5", new Username(new CaseInsensitiveString("user")),
                 new HttpLocalizedOperationResult());
@@ -1082,7 +1081,7 @@ public class GoConfigServiceTest {
     }
 
     @Test
-    public void configShouldContainOldMD5_WhenConfigMergeFailed(){
+    public void configShouldContainOldMD5_WhenConfigMergeFailed() {
         when(goConfigDao.loadForEditing()).thenReturn(new BasicCruiseConfig());
         when(goConfigDao.updateConfig(org.mockito.Matchers.<UpdateConfigCommand>any())).thenThrow(new ConfigFileHasChangedException());
         ConfigUpdateResponse configUpdateResponse = goConfigService.updateConfigFromUI(mock(UpdateConfigFromUI.class), "old-md5", new Username(new CaseInsensitiveString("user")),
@@ -1162,8 +1161,7 @@ public class GoConfigServiceTest {
 
 
     @Test
-    public void pipelineEditableViaUI_shouldReturnFalseWhenPipelineIsRemote() throws Exception
-    {
+    public void pipelineEditableViaUI_shouldReturnFalseWhenPipelineIsRemote() throws Exception {
         PipelineConfigs group = new BasicPipelineConfigs();
         PipelineConfig pipelineConfig = createPipelineConfig("pipeline", "name", "plan");
         pipelineConfig.setOrigin(new RepoConfigOrigin());
@@ -1171,9 +1169,9 @@ public class GoConfigServiceTest {
         expectLoad(new BasicCruiseConfig(group));
         assertThat(goConfigService.isPipelineEditableViaUI("pipeline"), is(false));
     }
+
     @Test
-    public void pipelineEditableViaUI_shouldReturnTrueWhenPipelineIsLocal() throws Exception
-    {
+    public void pipelineEditableViaUI_shouldReturnTrueWhenPipelineIsLocal() throws Exception {
         PipelineConfigs group = new BasicPipelineConfigs();
         PipelineConfig pipelineConfig = createPipelineConfig("pipeline", "name", "plan");
         group.add(pipelineConfig);
