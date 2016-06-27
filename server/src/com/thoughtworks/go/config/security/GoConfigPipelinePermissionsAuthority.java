@@ -20,6 +20,7 @@ import com.thoughtworks.go.config.*;
 import com.thoughtworks.go.domain.PipelineGroupVisitor;
 import com.thoughtworks.go.config.security.users.AllowedUsers;
 import com.thoughtworks.go.config.security.users.Everyone;
+import com.thoughtworks.go.domain.PipelineGroups;
 import com.thoughtworks.go.server.service.GoConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,13 +38,22 @@ public class GoConfigPipelinePermissionsAuthority {
     }
 
     public Map<CaseInsensitiveString, Permissions> pipelinesAndTheirPermissions() {
+        return pipelinesInGroupsAndTheirPermissions(goConfigService.groups());
+    }
+
+    public Permissions permissionsForPipeline(CaseInsensitiveString pipelineName) {
+        PipelineConfigs group = goConfigService.findGroupByPipeline(pipelineName);
+        return pipelinesInGroupsAndTheirPermissions(new PipelineGroups(group)).get(pipelineName);
+    }
+
+    private Map<CaseInsensitiveString, Permissions> pipelinesInGroupsAndTheirPermissions(PipelineGroups groups) {
         final Map<CaseInsensitiveString, Permissions> pipelinesAndTheirPermissions = new HashMap<>();
 
         final SecurityConfig security = goConfigService.security();
         final Map<String, Collection<String>> rolesToUsers = rolesToUsers(security);
         final Set<String> superAdmins = namesOf(security.adminsConfig(), rolesToUsers);
 
-        goConfigService.groups().accept(new PipelineGroupVisitor() {
+        groups.accept(new PipelineGroupVisitor() {
             @Override
             public void visit(PipelineConfigs group) {
                 Set<String> viewers = new HashSet<>();
