@@ -283,7 +283,7 @@ public class CcTrayConfigChangeHandlerTest {
 
         PipelineConfig pipeline1Config = GoConfigMother.pipelineHavingJob("pipeline1", "stage1", "job1", "arts", "dir").pipelineConfigByName(new CaseInsensitiveString("pipeline1"));
 
-        handler.call(pipeline1Config, "group1");
+        handler.call(pipeline1Config);
         ArgumentCaptor<ArrayList<ProjectStatus>> argumentCaptor = new ArgumentCaptor<>();
         verify(cache).putAll(argumentCaptor.capture());
 
@@ -313,7 +313,7 @@ public class CcTrayConfigChangeHandlerTest {
 
         PipelineConfig pipeline1Config = GoConfigMother.pipelineHavingJob("pipeline1", "stage1", "job1", "arts", "dir").pipelineConfigByName(new CaseInsensitiveString("pipeline1"));
 
-        handler.call(pipeline1Config, "group1");
+        handler.call(pipeline1Config);
         ArgumentCaptor<ArrayList<ProjectStatus>> argumentCaptor = new ArgumentCaptor<>();
         verify(cache).putAll(argumentCaptor.capture());
 
