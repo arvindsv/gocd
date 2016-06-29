@@ -22,6 +22,7 @@ import com.thoughtworks.go.config.PipelineConfig;
 import com.thoughtworks.go.domain.PipelinePauseInfo;
 import com.thoughtworks.go.i18n.LocalizedMessage;
 import com.thoughtworks.go.server.dao.PipelineSqlMapDao;
+import com.thoughtworks.go.server.domain.PipelinePauseChangeListener;
 import com.thoughtworks.go.server.domain.Username;
 import com.thoughtworks.go.server.service.result.DefaultLocalizedOperationResult;
 import com.thoughtworks.go.server.service.result.LocalizedOperationResult;
@@ -29,9 +30,13 @@ import com.thoughtworks.go.server.util.UserHelper;
 import com.thoughtworks.go.serverhealth.HealthStateScope;
 import com.thoughtworks.go.serverhealth.HealthStateType;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class PipelinePauseService {
@@ -40,7 +45,8 @@ public class PipelinePauseService {
     private final GoConfigService goConfigService;
     private final SecurityService securityService;
 
-    private static final Logger LOGGER = Logger.getLogger(PipelinePauseService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PipelinePauseService.class);
+    private List<PipelinePauseChangeListener> listeners = new ArrayList<>();
 
     @Autowired
     public PipelinePauseService(PipelineSqlMapDao pipelineSqlMapDao, GoConfigService goConfigService, SecurityService securityService) {
@@ -86,6 +92,10 @@ public class PipelinePauseService {
         }
     }
 
+    public void registerListener(PipelinePauseChangeListener pipelinePauseChangeListener) {
+        listeners.add(pipelinePauseChangeListener);
+    }
+
     public PipelinePauseInfo pipelinePauseInfo(String pipelineName) {
         PipelinePauseInfo pipelinePauseInfo = pipelineSqlMapDao.pauseState(pipelineName);
         return pipelinePauseInfo == null ? PipelinePauseInfo.notPaused() : pipelinePauseInfo;
@@ -103,6 +113,7 @@ public class PipelinePauseService {
             String sanitizedPauseBy = pauseByDisplayName.substring(0, Math.min(255, pauseByDisplayName.length()));
             pipelineSqlMapDao.pause(pipelineName, sanitizedPauseCause, sanitizedPauseBy);
             LOGGER.info(String.format("[Pipeline Pause] Pipeline [%s] is paused by [%s] because [%s]", pipelineName, pauseBy, pauseCause));
+            notifyListeners(PipelinePauseChangeListener.Event.pause(pipelineName, pauseBy));
         }
     }
 
@@ -130,6 +141,7 @@ public class PipelinePauseService {
         synchronized (mutextPipelineName) {
             pipelineSqlMapDao.unpause(pipelineName);
             LOGGER.info(String.format("[Pipeline Unpause] Pipeline [%s] is unpaused by [%s]", pipelineName,unpausedBy));
+            notifyListeners(PipelinePauseChangeListener.Event.unPause(pipelineName, unpausedBy));
         }
     }
 
@@ -139,5 +151,19 @@ public class PipelinePauseService {
      */
     public static String mutexForPausePipeline(String pipelineName) {
         return (PipelineSqlMapDao.class.getName() + "_mutexForPausePipeline_" + pipelineName).intern();
+    }
+
+    private void notifyListeners(PipelinePauseChangeListener.Event event) {
+        for (PipelinePauseChangeListener listener : listeners) {
+            try {
+                LOGGER.debug("START  Notifying listener ({}) of event: {}", listener, event);
+
+                listener.pauseStatusChanged(event);
+
+                LOGGER.debug("FINISH Notifying listener ({}) of event: {}", listener, event);
+            } catch (Exception e) {
+                LOGGER.warn("Failed to notify listener ({}) of event: {}", listener, event);
+            }
+        }
     }
 }
