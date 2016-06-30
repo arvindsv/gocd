@@ -545,10 +545,6 @@ public class PipelineConfig extends BaseCollection<StageConfig> implements Param
         return lock != null;
     }
 
-    public void removeExplicitLocks() {
-        this.lock = null;
-    }
-
     public Boolean explicitLock() {
         if (!hasExplicitLock()) {
             throw new RuntimeException(String.format("There is no explicit lock on the pipeline '%s'.", name));
