@@ -40,16 +40,12 @@ import com.thoughtworks.go.server.util.Pagination;
 import com.thoughtworks.go.server.util.SqlUtil;
 import com.thoughtworks.go.util.SystemEnvironment;
 import org.apache.log4j.Logger;
-import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.*;
-import org.hibernate.transform.BasicTransformerAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 
 import java.util.*;
@@ -445,19 +441,19 @@ public class PipelineSqlMapDao extends SqlMapClientDaoSupport implements Initial
     }
 
     public PipelineInstanceModels loadActivePipelines() {
-        String cacheKey = activePipelinesCacheKey();
-        Map<String, TreeSet<Long>> result = (Map<String, TreeSet<Long>>) goCache.get(cacheKey);
-        if (result == null) {
-            synchronized (cacheKey) {
-                result = (Map<String, TreeSet<Long>>) goCache.get(cacheKey);
-                if (result == null) {
-                    List<PipelineInstanceModel> pipelines = getAllPIMs();
-                    result = groupPipelineInstanceIdsByPipelineName(pipelines);
-                    goCache.put(cacheKey, result);
-                }
-            }
+        return convertToPipelineInstanceModels(getAllActivePipelineNamesVsTheirInstanceIDs());
+    }
+
+    @Override
+    public PipelineInstanceModels loadActivePipelineInstancesFor(String pipelineName) {
+        Map<String, TreeSet<Long>> allActivePipelineNamesVsTheirInstanceIDs = getAllActivePipelineNamesVsTheirInstanceIDs();
+        Map<String, TreeSet<Long>> similarMapForSinglePipeline = new HashMap<>();
+
+        if (allActivePipelineNamesVsTheirInstanceIDs.containsKey(pipelineName)) {
+            similarMapForSinglePipeline.put(pipelineName, allActivePipelineNamesVsTheirInstanceIDs.get(pipelineName));
         }
-        return convertToPipelineInstanceModels(result);
+
+        return convertToPipelineInstanceModels(similarMapForSinglePipeline);
     }
 
     private void cacheMaterialRevisions(List<PipelineInstanceModel> models) {
@@ -948,5 +944,21 @@ public class PipelineSqlMapDao extends SqlMapClientDaoSupport implements Initial
 
         Pipeline pipeline = findPipelineByNameAndCounter(pipelineName, pipelineCounter);
         goCache.remove(pipelineHistoryCacheKey(pipeline.getId()));
+    }
+
+    private Map<String, TreeSet<Long>> getAllActivePipelineNamesVsTheirInstanceIDs() {
+        String cacheKey = activePipelinesCacheKey();
+        Map<String, TreeSet<Long>> result = (Map<String, TreeSet<Long>>) goCache.get(cacheKey);
+        if (result == null) {
+            synchronized (cacheKey) {
+                result = (Map<String, TreeSet<Long>>) goCache.get(cacheKey);
+                if (result == null) {
+                    List<PipelineInstanceModel> pipelines = getAllPIMs();
+                    result = groupPipelineInstanceIdsByPipelineName(pipelines);
+                    goCache.put(cacheKey, result);
+                }
+            }
+        }
+        return result;
     }
 }
