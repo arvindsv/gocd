@@ -284,6 +284,8 @@ Go::Application.routes.draw do
         get 'environments/:name/withremote' => 'environments_with_remote#show', constraints: {:name => ENVIRONMENT_NAME_FORMAT}
       end
 
+      get 'dashboard', controller: :dashboard, action: :dashboard, as: :show_dashboard
+
       match '*url', via: :all, to: 'errors#not_found'
     end
   end
