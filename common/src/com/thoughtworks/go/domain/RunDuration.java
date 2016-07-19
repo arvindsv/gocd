@@ -25,18 +25,36 @@ import org.joda.time.format.PeriodFormatterBuilder;
  * @understands the time taken for a stage to complete
  */
 public abstract class RunDuration {
+    protected Duration duration;
+
+    public abstract String duration(PeriodFormatter formatter);
+    public abstract long getTotalSeconds();
+
     public static final PeriodFormatter PERIOD_FORMATTER =
             new PeriodFormatterBuilder().printZeroAlways().minimumPrintedDigits(
                     2).appendHours().appendSeparator(
                     ":").appendMinutes().appendSeparator(":").appendSeconds().toFormatter();
-    protected Duration duration;
 
-    public abstract String duration(PeriodFormatter formatter);
+    public static final RunDuration NULL_DURATION = new RunDuration() {
+        public String duration(PeriodFormatter formatter) {
+            return "Has not run";
+        }
+
+        @Override
+        public long getTotalSeconds() {
+            return 0;
+        }
+    };
 
     public static final RunDuration IN_PROGRESS_DURATION = new RunDuration() {
 
         public String duration(PeriodFormatter formatter) {
             return "In Progress";
+        }
+
+        @Override
+        public long getTotalSeconds() {
+            return 0;
         }
     };
 
@@ -50,9 +68,10 @@ public abstract class RunDuration {
             return formatter.print(duration.toPeriod());
         }
 
+        @Override
         public long getTotalSeconds() {
             Period period = duration.toPeriod();
-            return period.getHours()*3600 + period.getMinutes()*60 + period.getSeconds();
+            return period.getHours() * 3600 + period.getMinutes() * 60 + period.getSeconds();
         }
     }
 

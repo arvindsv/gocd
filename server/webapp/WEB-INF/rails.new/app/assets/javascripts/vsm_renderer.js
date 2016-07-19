@@ -315,13 +315,18 @@ Graph_Renderer = function (container) {
     function renderPipelineInstance(node_id, instance) {
         var gui = '';
         var stagesCount = 0;
+
+        var durationOfPipeline = 0;
+        $j(instance.stages).each(function(index, elem) { durationOfPipeline += elem.duration; });
+        var durationRepresentation = '(' + Math.floor(durationOfPipeline / 60) + 'm ' + (durationOfPipeline % 60) + 's)';
+
         gui += '<li class="instance">';
         if (instance.label != '') {
             if (isCurrent) {
-                gui += '<h4 title="' + instance.label + '"><i class="label">Label: </i>' + instance.label + '</h4>';
+                gui += '<h4 title="' + instance.label + '"><i class="label">Label: </i>' + instance.label + '<span style="float: right; margin-right: 10px; color: #cdac5c">' + durationRepresentation + '</span></h4>';
             }
             else {
-                gui += '<h4 title="' + instance.label + '"><i class="label">Label: </i><a href="' + instance.locator + '">' + instance.label + '</a></h4>';
+                gui += '<h4 title="' + instance.label + '"><i class="label">Label: </i><a href="' + instance.locator + '">' + instance.label + '</a><span style="float: right; margin-right: 10px; color: #cdac5c">' + durationRepresentation + '</span></h4>';
             }
         }
         if(instance.locator.trim() != "") {

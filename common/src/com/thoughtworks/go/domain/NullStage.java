@@ -70,6 +70,11 @@ public final class NullStage extends Stage {
         return StageState.Unknown;
     }
 
+    @Override
+    public RunDuration getDuration() {
+        return RunDuration.NULL_DURATION;
+    }
+
     public boolean equals(Object o) {
         if (getClass() != o.getClass()) {
             return false;
