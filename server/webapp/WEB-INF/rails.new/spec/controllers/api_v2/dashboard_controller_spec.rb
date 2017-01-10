@@ -26,12 +26,14 @@ describe ApiV2::DashboardController do
     controller.stub(:populate_config_validity)
 
     @go_dashboard_service = stub_service(:go_dashboard_service)
+    @pipeline_selections_service = stub_service(:pipeline_selections_service)
   end
 
   describe :dashboard do
     it 'should get dashboard json' do
       all_pipelines = [dashboard_pipeline("pipeline1"), dashboard_pipeline("pipeline2")]
       @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(all_pipelines)
+      @pipeline_selections_service.should_receive(:getSelectedPipelines).with(anything, anything).and_return(PipelineSelections::ALL)
 
       get_with_api_header :dashboard
       expect(response).to be_ok
@@ -41,6 +43,7 @@ describe ApiV2::DashboardController do
     it 'should get empty json when dashboard is empty' do
       no_pipelines = []
       @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(no_pipelines)
+      @pipeline_selections_service.should_receive(:getSelectedPipelines).with(anything, anything).and_return(PipelineSelections::ALL)
 
       get_with_api_header :dashboard
       expect(response).to be_ok
@@ -56,6 +59,24 @@ describe ApiV2::DashboardController do
       all_pipelines = [pipeline_which_user_can_see, pipeline_which_user_cannot_see]
       expected_pipelines_in_output = [pipeline_which_user_can_see]
       @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(all_pipelines)
+      @pipeline_selections_service.should_receive(:getSelectedPipelines).with(anything, anything).and_return(PipelineSelections::ALL)
+
+      get_with_api_header :dashboard
+      expect(response).to be_ok
+      expect(actual_response).to eq(expected_response(expected_pipelines_in_output, ApiV2::Dashboard::PipelineGroupsRepresenter))
+    end
+
+    it "should not output any pipelines which are not included in user's pipeline selections" do
+      permissions = Permissions.new(NoOne.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE)
+
+      pipeline_which_user_can_see = dashboard_pipeline("pipeline1", "group1")
+      pipeline_which_user_cannot_see = dashboard_pipeline("pipeline2", "group1", permissions)
+      pipeline_which_user_has_permission_to_see_by_filtered = dashboard_pipeline("pipeline3", "group1")
+
+      all_pipelines = [pipeline_which_user_can_see, pipeline_which_user_cannot_see, pipeline_which_user_has_permission_to_see_by_filtered ]
+      expected_pipelines_in_output = [pipeline_which_user_can_see]
+      @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(all_pipelines)
+      @pipeline_selections_service.should_receive(:getSelectedPipelines).with(anything, anything).and_return(PipelineSelections.new(Arrays::asList("pipeline3")))
 
       get_with_api_header :dashboard
       expect(response).to be_ok

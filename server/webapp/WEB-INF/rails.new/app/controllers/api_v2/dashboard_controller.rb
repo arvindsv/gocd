@@ -21,9 +21,11 @@ module ApiV2
     def dashboard
       name_of_current_user = CaseInsensitiveString.str(current_user.getUsername())
 
+      pipeline_selections = pipeline_selections_service.getSelectedPipelines(cookies[:selected_pipelines], current_user_entity_id)
+
       pipelines_across_groups = go_dashboard_service.allPipelinesForDashboard()
       pipelines_viewable_by_user = pipelines_across_groups.select do |pipeline|
-        pipeline.canBeViewedBy(name_of_current_user)
+        pipeline.canBeViewedBy(name_of_current_user) && pipeline_selections.includesPipeline(pipeline.name())
       end
 
       presenters              = Dashboard::PipelineGroupsRepresenter.new(pipelines_viewable_by_user)
