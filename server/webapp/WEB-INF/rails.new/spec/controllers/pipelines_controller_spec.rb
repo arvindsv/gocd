@@ -39,6 +39,7 @@ describe PipelinesController do
     controller.stub(:go_config_service).and_return(@go_config_service=double())
     controller.stub(:security_service).and_return(@security_service=double())
     controller.stub(:pipeline_config_service).and_return(@pipeline_config_service=double())
+    controller.stub(:pipeline_selections_service).and_return(@pipeline_selections_service=double())
     @pipeline_identifier = PipelineIdentifier.new("blah", 1, "label")
     controller.stub(:populate_config_validity)
     @pipeline_service = double('pipeline_service')
@@ -87,7 +88,7 @@ describe PipelinesController do
     end
 
     it "should load the dashboard" do
-      @go_config_service.should_receive(:getSelectedPipelines).with(@selected_pipeline_id,@user_id).and_return(selections=PipelineSelections.new)
+      @pipeline_selections_service.should_receive(:getSelectedPipelines).with(@selected_pipeline_id,@user_id).and_return(selections=PipelineSelections.new)
       @pipeline_history_service.should_receive(:allActivePipelineInstances).with(@user,selections).and_return(:pipeline_group_models)
       @pipeline_config_service.should_receive(:viewableGroupsFor).with(@user).and_return(viewable_groups=BasicPipelineConfigs.new)
       @security_service.should_receive(:canCreatePipelines).with(@user).and_return(true)
@@ -107,7 +108,7 @@ describe PipelinesController do
     it "should redirect to 'add pipeline wizard' when there are no pipelines in config only if the user is an admin" do
       pipeline_group_models = java.util.ArrayList.new
       pipeline_group_models.add(PipelineGroupModel.new("bla"))
-      @go_config_service.should_receive(:getSelectedPipelines).with(@selected_pipeline_id,@user_id).and_return(selections=PipelineSelections.new)
+      @pipeline_selections_service.should_receive(:getSelectedPipelines).with(@selected_pipeline_id,@user_id).and_return(selections=PipelineSelections.new)
       @pipeline_history_service.should_receive(:allActivePipelineInstances).with(@user,selections).and_return(pipeline_group_models)
       @pipeline_config_service.should_receive(:viewableGroupsFor).with(@user).and_return(viewable_groups=BasicPipelineConfigs.new())
       @security_service.should_receive(:canCreatePipelines).with(@user).and_return(true)
@@ -120,7 +121,7 @@ describe PipelinesController do
     it "should not redirect to 'add pipeline wizard' when there are no pipelines in config and the user is a template admin or is not an admin" do
       pipeline_group_models = java.util.ArrayList.new
       pipeline_group_models.add(PipelineGroupModel.new("bla"))
-      @go_config_service.should_receive(:getSelectedPipelines).with(@selected_pipeline_id, @user_id).and_return(selections=PipelineSelections.new)
+      @pipeline_selections_service.should_receive(:getSelectedPipelines).with(@selected_pipeline_id, @user_id).and_return(selections=PipelineSelections.new)
       @pipeline_history_service.should_receive(:allActivePipelineInstances).with(@user,selections).and_return(pipeline_group_models)
       @security_service.should_receive(:canCreatePipelines).with(@user).and_return(false)
       @pipeline_config_service.should_receive(:viewableGroupsFor).with(@user).and_return(viewable_groups=BasicPipelineConfigs.new())
@@ -134,7 +135,7 @@ describe PipelinesController do
       pipeline_group_models = java.util.ArrayList.new
       pipeline_group_models.add(PipelineGroupModel.new("bla"))
       viewable_groups = PipelineConfigMother::createGroup("blah", [PipelineConfigMother::createPipelineConfig("pip1", "stage1", ["job1"].to_java(:string))].to_java('com.thoughtworks.go.config.PipelineConfig'))
-      @go_config_service.should_receive(:getSelectedPipelines).with(@selected_pipeline_id,@user_id).and_return(selections=PipelineSelections.new)
+      @pipeline_selections_service.should_receive(:getSelectedPipelines).with(@selected_pipeline_id,@user_id).and_return(selections=PipelineSelections.new)
       @pipeline_history_service.should_receive(:allActivePipelineInstances).with(@user, selections).and_return(pipeline_group_models)
       @pipeline_config_service.should_receive(:viewableGroupsFor).with(@user).and_return(viewable_groups)
 
@@ -258,7 +259,7 @@ describe PipelinesController do
     end
 
     it "should set cookies for a selected pipelines" do
-      @go_config_service.should_receive(:persistSelectedPipelines).with("456", @user_id, ["pipeline1", "pipeline2"], true).and_return(1234)
+      @pipeline_selections_service.should_receive(:persistSelectedPipelines).with("456", @user_id, ["pipeline1", "pipeline2"], true).and_return(1234)
       controller.stub(:cookies).and_return(cookiejar={:selected_pipelines => "456"})
 
       post "select_pipelines", "selector" => {:pipeline=>["pipeline1", "pipeline2"]}, show_new_pipelines: "true"
@@ -267,7 +268,7 @@ describe PipelinesController do
     end
 
     it "should set cookies when no pipelines selected" do
-      @go_config_service.should_receive(:persistSelectedPipelines).with("456", @user_id, [], true).and_return(1234)
+      @pipeline_selections_service.should_receive(:persistSelectedPipelines).with("456", @user_id, [], true).and_return(1234)
       controller.stub(:cookies).and_return(cookiejar={:selected_pipelines => "456"})
 
       post "select_pipelines", "selector" => {}, show_new_pipelines: "true"
@@ -276,7 +277,7 @@ describe PipelinesController do
     end
 
     it "should set cookies when no pipelines or groups selected" do
-      @go_config_service.should_receive(:persistSelectedPipelines).with("456", @user_id, [], true).and_return(1234)
+      @pipeline_selections_service.should_receive(:persistSelectedPipelines).with("456", @user_id, [], true).and_return(1234)
       controller.stub(:cookies).and_return(cookiejar={:selected_pipelines => "456"})
 
       post "select_pipelines", show_new_pipelines: "true"
@@ -286,14 +287,14 @@ describe PipelinesController do
 
     it "should persist the value of 'show_new_pipelines' when it is true" do
       controller.stub(:cookies).and_return(cookiejar={:selected_pipelines => "456"})
-      @go_config_service.should_receive(:persistSelectedPipelines).with("456", @user_id, ["pipeline1", "pipeline2"], true).and_return(1234)
+      @pipeline_selections_service.should_receive(:persistSelectedPipelines).with("456", @user_id, ["pipeline1", "pipeline2"], true).and_return(1234)
 
       post "select_pipelines", "selector" => { pipeline: ["pipeline1", "pipeline2"]}, show_new_pipelines: "true"
     end
 
     it "should persist the value of 'show_new_pipelines' when it is false" do
       controller.stub(:cookies).and_return(cookiejar={:selected_pipelines => "456"})
-      @go_config_service.should_receive(:persistSelectedPipelines).with("456", @user_id, ["pipeline1", "pipeline2"], false).and_return(1234)
+      @pipeline_selections_service.should_receive(:persistSelectedPipelines).with("456", @user_id, ["pipeline1", "pipeline2"], false).and_return(1234)
 
       post "select_pipelines", "selector" => { pipeline: ["pipeline1", "pipeline2"]}
     end
@@ -305,7 +306,7 @@ describe PipelinesController do
     end
 
     it "should not update set cookies for selected pipelines when security enabled" do
-      @go_config_service.should_receive(:persistSelectedPipelines).with("456", @user_id, ["pipeline1", "pipeline2"], true).and_return(1234)
+      @pipeline_selections_service.should_receive(:persistSelectedPipelines).with("456", @user_id, ["pipeline1", "pipeline2"], true).and_return(1234)
       controller.stub(:cookies).and_return(cookiejar={:selected_pipelines => "456"})
 
       post "select_pipelines", "selector" => {:pipeline=>["pipeline1", "pipeline2"]}, show_new_pipelines: "true"
@@ -314,9 +315,9 @@ describe PipelinesController do
     end
 
     it "should not set cookies when selected pipeline cookie is absent when security enabled" do
-      @go_config_service.should_receive(:persistSelectedPipelines).with(nil, @user_id, [], true).and_return(1234)
+      @pipeline_selections_service.should_receive(:persistSelectedPipelines).with(nil, @user_id, [], true).and_return(1234)
       controller.stub(:cookies).and_return(cookiejar = {})
-
+      
       post "select_pipelines", "selector" => {}, show_new_pipelines: "true"
 
       expect(cookiejar[:selected_pipelines]).to eq(nil)
@@ -325,7 +326,7 @@ describe PipelinesController do
 
   describe "set_tab_name" do
     it "should set tab name" do
-      @go_config_service.should_receive(:getSelectedPipelines).with(@selected_pipeline_id,@user_id).and_return(selections=PipelineSelections.new)
+      @pipeline_selections_service.should_receive(:getSelectedPipelines).with(@selected_pipeline_id,@user_id).and_return(selections=PipelineSelections.new)
       @pipeline_history_service.should_receive(:allActivePipelineInstances).with(@user,selections).and_return(:pipeline_group_models)
       @pipeline_config_service.should_receive(:viewableGroupsFor).with(@user).and_return(viewable_groups=BasicPipelineConfigs.new)
       @security_service.should_receive(:canCreatePipelines).with(@user).and_return(true)
