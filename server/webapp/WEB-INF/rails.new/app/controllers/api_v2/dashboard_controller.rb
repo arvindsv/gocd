@@ -18,19 +18,33 @@ module ApiV2
 
     include ApplicationHelper
 
+    before_filter :check_timestamp
+
     def dashboard
       name_of_current_user = CaseInsensitiveString.str(current_user.getUsername())
 
       pipeline_selections = pipeline_selections_service.getSelectedPipelines(cookies[:selected_pipelines], current_user_entity_id)
 
-      pipelines_across_groups = go_dashboard_service.allPipelinesForDashboard()
+      all_pipelines_for_dashboard = go_dashboard_service.allPipelinesForDashboard()
+      pipelines_across_groups = all_pipelines_for_dashboard.orderedEntries()
+
+      dashboard_last_updated_time_stamp_header = request.headers["Go-Dashboard-Last-Updated-Timestamp"].to_i || 0
       pipelines_viewable_by_user = pipelines_across_groups.select do |pipeline|
-        pipeline.canBeViewedBy(name_of_current_user) && pipeline_selections.includesPipeline(pipeline.name())
+        has_pipeline_been_updated_since_last_fetch = pipeline.lastUpdatedTimeStamp() > dashboard_last_updated_time_stamp_header
+        does_user_have_view_permissions = pipeline.canBeViewedBy(name_of_current_user)
+        has_user_selected_the_pipeline_for_display = pipeline_selections.includesPipeline(pipeline.name())
+
+        does_user_have_view_permissions && has_user_selected_the_pipeline_for_display && has_pipeline_been_updated_since_last_fetch
       end
 
-      presenters              = Dashboard::PipelineGroupsRepresenter.new(pipelines_viewable_by_user)
+      presenters = Dashboard::PipelineGroupsRepresenter.new(pipelines_viewable_by_user)
+      response.headers['Go-Dashboard-Last-Updated-Timestamp'] = all_pipelines_for_dashboard.lastUpdatedTimeStamp().to_s
       render DEFAULT_FORMAT => presenters.to_hash(url_builder: self)
     end
 
+    private
+    def check_timestamp
+      render_message("Please provide a numeric value for header 'Go-Dashboard-Last-Updated-Timestamp'", :precondition_failed)  if !request.headers["Go-Dashboard-Last-Updated-Timestamp"].blank? && request.headers["Go-Dashboard-Last-Updated-Timestamp"].match("^[0-9]+$").nil?
+    end
   end
 end

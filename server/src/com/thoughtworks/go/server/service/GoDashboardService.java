@@ -23,6 +23,7 @@ import com.thoughtworks.go.config.PipelineConfigs;
 import com.thoughtworks.go.server.dashboard.GoDashboardCache;
 import com.thoughtworks.go.server.dashboard.GoDashboardCurrentStateLoader;
 import com.thoughtworks.go.server.dashboard.GoDashboardPipeline;
+import com.thoughtworks.go.server.dashboard.GoDashboardPipelines;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +43,7 @@ public class GoDashboardService {
         this.goConfigService = goConfigService;
     }
 
-    public List<GoDashboardPipeline> allPipelinesForDashboard() {
+    public GoDashboardPipelines allPipelinesForDashboard() {
         return cache.allEntriesInOrder();
     }
 

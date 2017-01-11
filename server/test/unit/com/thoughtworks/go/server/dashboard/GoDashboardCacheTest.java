@@ -17,6 +17,7 @@
 package com.thoughtworks.go.server.dashboard;
 
 import com.thoughtworks.go.config.CaseInsensitiveString;
+import com.thoughtworks.go.util.TimeProvider;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,13 +30,14 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class GoDashboardCacheTest {
     private GoDashboardCache cache;
 
     @Before
     public void setUp() throws Exception {
-        cache = new GoDashboardCache();
+        cache = new GoDashboardCache(mock(ReliableTimestampProvider.class));
     }
 
     @Test
@@ -95,7 +97,7 @@ public class GoDashboardCacheTest {
         GoDashboardPipeline pipeline3 = pipeline("pipeline3");
 
         cache.replaceAllEntriesInCacheWith(asList(pipeline1, pipeline2, pipeline3));
-        List<GoDashboardPipeline> allPipelines = cache.allEntriesInOrder();
+        List<GoDashboardPipeline> allPipelines = cache.allEntriesInOrder().orderedEntries();
 
         assertThat(allPipelines.size(), is(3));
         assertThat(allPipelines.get(0), is(sameInstance(pipeline1)));
@@ -111,11 +113,11 @@ public class GoDashboardCacheTest {
         GoDashboardPipeline pipeline3 = pipeline("pipeline3");
 
         cache.replaceAllEntriesInCacheWith(asList(pipeline1, pipeline2, pipeline3));
-        List<GoDashboardPipeline> allPipelinesBeforePut = cache.allEntriesInOrder();
+        List<GoDashboardPipeline> allPipelinesBeforePut = cache.allEntriesInOrder().orderedEntries();
         assertThat(allPipelinesBeforePut.get(1), is(sameInstance(pipeline2)));
 
         cache.put(newPipeline2);
-        List<GoDashboardPipeline> allPipelinesAfterPut = cache.allEntriesInOrder();
+        List<GoDashboardPipeline> allPipelinesAfterPut = cache.allEntriesInOrder().orderedEntries();
 
         assertThat(allPipelinesAfterPut.size(), is(3));
         assertThat(allPipelinesAfterPut.get(0), is(sameInstance(pipeline1)));

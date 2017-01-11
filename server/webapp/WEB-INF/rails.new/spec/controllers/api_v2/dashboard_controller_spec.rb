@@ -30,19 +30,52 @@ describe ApiV2::DashboardController do
   end
 
   describe :dashboard do
+
+    before(:each) do
+      clock = double('Clock')
+      clock.stub(:currentTimeMillis).and_return(11111)
+      @timestamp_provider = com.thoughtworks.go.server.dashboard.ReliableTimestampProvider.new(clock)
+    end
+
+    it 'should accept only number for Go-Dashboard-Last-Updated-Timestamp header' do
+      controller.request.env['HTTP_GO_DASHBOARD_LAST_UPDATED_TIMESTAMP'] = "Garbage"
+      get_with_api_header :dashboard
+
+      expect(response.status).to eq(412)
+      expect(actual_response).to eq({message: "Please provide a numeric value for header 'Go-Dashboard-Last-Updated-Timestamp'"})
+    end
+
     it 'should get dashboard json' do
       all_pipelines = [dashboard_pipeline("pipeline1"), dashboard_pipeline("pipeline2")]
-      @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(all_pipelines)
+      go_dashboard_pipelines = GoDashboardPipelines.new(all_pipelines, @timestamp_provider)
+      @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(go_dashboard_pipelines)
       @pipeline_selections_service.should_receive(:getSelectedPipelines).with(anything, anything).and_return(PipelineSelections::ALL)
 
       get_with_api_header :dashboard
       expect(response).to be_ok
       expect(actual_response).to eq(expected_response(all_pipelines, ApiV2::Dashboard::PipelineGroupsRepresenter))
+      expect(response.headers['Go-Dashboard-Last-Updated-Timestamp']).to eq(go_dashboard_pipelines.lastUpdatedTimeStamp())
+    end
+
+    it 'should return only modified pipelines from the previous GoLastUpdatedTimeStamp' do
+
+      pipeline1 = dashboard_pipeline("pipeline1", "group1", Permissions.new(Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE), 3000)
+      pipeline2 = dashboard_pipeline("pipeline2", "group1", Permissions.new(Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE), 1000)
+      all_pipelines = [pipeline1, pipeline2]
+      go_dashboard_pipelines = GoDashboardPipelines.new(all_pipelines, @timestamp_provider)
+      @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(go_dashboard_pipelines)
+      @pipeline_selections_service.should_receive(:getSelectedPipelines).with(anything, anything).and_return(PipelineSelections::ALL)
+
+      controller.request.env['HTTP_GO_DASHBOARD_LAST_UPDATED_TIMESTAMP'] = "2000"
+      get_with_api_header :dashboard
+      expect(response).to be_ok
+      expect(actual_response).to eq(expected_response([pipeline1], ApiV2::Dashboard::PipelineGroupsRepresenter))
+      expect(response.headers['Go-Dashboard-Last-Updated-Timestamp']).to eq(go_dashboard_pipelines.lastUpdatedTimeStamp())
     end
 
     it 'should get empty json when dashboard is empty' do
       no_pipelines = []
-      @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(no_pipelines)
+      @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(GoDashboardPipelines.new(no_pipelines, @timestamp_provider))
       @pipeline_selections_service.should_receive(:getSelectedPipelines).with(anything, anything).and_return(PipelineSelections::ALL)
 
       get_with_api_header :dashboard
@@ -58,7 +91,7 @@ describe ApiV2::DashboardController do
 
       all_pipelines = [pipeline_which_user_can_see, pipeline_which_user_cannot_see]
       expected_pipelines_in_output = [pipeline_which_user_can_see]
-      @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(all_pipelines)
+      @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(GoDashboardPipelines.new(all_pipelines, @timestamp_provider))
       @pipeline_selections_service.should_receive(:getSelectedPipelines).with(anything, anything).and_return(PipelineSelections::ALL)
 
       get_with_api_header :dashboard
@@ -73,9 +106,9 @@ describe ApiV2::DashboardController do
       pipeline_which_user_cannot_see = dashboard_pipeline("pipeline2", "group1", permissions)
       pipeline_which_user_has_permission_to_see_by_filtered = dashboard_pipeline("pipeline3", "group1")
 
-      all_pipelines = [pipeline_which_user_can_see, pipeline_which_user_cannot_see, pipeline_which_user_has_permission_to_see_by_filtered ]
+      all_pipelines = [pipeline_which_user_can_see, pipeline_which_user_cannot_see, pipeline_which_user_has_permission_to_see_by_filtered]
       expected_pipelines_in_output = [pipeline_which_user_can_see]
-      @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(all_pipelines)
+      @go_dashboard_service.should_receive(:allPipelinesForDashboard).and_return(GoDashboardPipelines.new(all_pipelines, @timestamp_provider))
       @pipeline_selections_service.should_receive(:getSelectedPipelines).with(anything, anything).and_return(PipelineSelections.new(Arrays::asList("pipeline3")))
 
       get_with_api_header :dashboard

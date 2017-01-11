@@ -25,11 +25,13 @@ public class GoDashboardPipeline {
     private final PipelineModel pipelineModel;
     private final Permissions permissions;
     private final String groupName;
+    private final long lastUpdatedTimeStamp;
 
-    public GoDashboardPipeline(PipelineModel pipelineModel, Permissions permissions, String groupName) {
+    public GoDashboardPipeline(PipelineModel pipelineModel, Permissions permissions, String groupName, ReliableTimestampProvider reliableTimestampProvider) {
         this.pipelineModel = pipelineModel;
         this.permissions = permissions;
         this.groupName = groupName;
+        this.lastUpdatedTimeStamp = reliableTimestampProvider.getNext();
     }
 
     public String groupName() {
@@ -50,6 +52,10 @@ public class GoDashboardPipeline {
 
     public boolean canBeViewedBy(String userName) {
         return permissions.viewers().contains(userName);
+    }
+
+    public long getLastUpdatedTimeStamp() {
+        return lastUpdatedTimeStamp;
     }
 
     @Override

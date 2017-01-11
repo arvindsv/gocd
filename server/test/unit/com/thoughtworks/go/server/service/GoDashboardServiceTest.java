@@ -21,9 +21,7 @@ import com.thoughtworks.go.config.CruiseConfig;
 import com.thoughtworks.go.config.PipelineConfig;
 import com.thoughtworks.go.config.PipelineConfigs;
 import com.thoughtworks.go.helper.GoConfigMother;
-import com.thoughtworks.go.server.dashboard.GoDashboardCache;
-import com.thoughtworks.go.server.dashboard.GoDashboardCurrentStateLoader;
-import com.thoughtworks.go.server.dashboard.GoDashboardPipeline;
+import com.thoughtworks.go.server.dashboard.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -34,6 +32,7 @@ import static com.thoughtworks.go.server.dashboard.GoDashboardPipelineMother.pip
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -106,11 +105,10 @@ public class GoDashboardServiceTest {
 
     @Test
     public void shouldRetrieveTheLatestKnownSetOfPipelinesFromTheCache() throws Exception {
-        List<GoDashboardPipeline> cachedPipelines = asList(pipeline("pipeline1"), pipeline("pipeline2"));
-
+        GoDashboardPipelines cachedPipelines = new GoDashboardPipelines(asList(pipeline("pipeline1"), pipeline("pipeline2")), mock(ReliableTimestampProvider.class));
         when(cache.allEntriesInOrder()).thenReturn(cachedPipelines);
 
-        List<GoDashboardPipeline> currentPipelines = service.allPipelinesForDashboard();
+        GoDashboardPipelines currentPipelines = service.allPipelinesForDashboard();
 
         assertThat(currentPipelines, is(cachedPipelines));
     }

@@ -19,6 +19,7 @@ package com.thoughtworks.go.server.dashboard;
 import com.thoughtworks.go.config.security.Permissions;
 import com.thoughtworks.go.config.security.users.Everyone;
 import com.thoughtworks.go.presentation.pipelinehistory.PipelineModel;
+import com.thoughtworks.go.util.SystemTimeClock;
 
 import static com.thoughtworks.go.domain.PipelinePauseInfo.notPaused;
 
@@ -29,6 +30,6 @@ public class GoDashboardPipelineMother {
 
     public static GoDashboardPipeline pipeline(String pipelineName, String groupName) {
         Permissions permissions = new Permissions(Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE);
-        return new GoDashboardPipeline(new PipelineModel(pipelineName, false, false, notPaused()), permissions, groupName);
+        return new GoDashboardPipeline(new PipelineModel(pipelineName, false, false, notPaused()), permissions, groupName, new ReliableTimestampProvider(new SystemTimeClock()));
     }
 }

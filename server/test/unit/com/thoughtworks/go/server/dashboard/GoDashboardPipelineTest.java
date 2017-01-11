@@ -26,6 +26,8 @@ import static com.thoughtworks.go.domain.PipelinePauseInfo.notPaused;
 import static com.thoughtworks.go.util.DataStructureUtils.s;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class GoDashboardPipelineTest {
     @Test
@@ -36,12 +38,21 @@ public class GoDashboardPipelineTest {
                 new AllowedUsers(s("admin", "root")),
                 Everyone.INSTANCE);
 
-        GoDashboardPipeline pipeline = new GoDashboardPipeline(new PipelineModel("pipeline1", false, false, notPaused()), permissions, "group1");
+        GoDashboardPipeline pipeline = new GoDashboardPipeline(new PipelineModel("pipeline1", false, false, notPaused()), permissions, "group1", mock(ReliableTimestampProvider.class));
 
         assertThat(pipeline.canBeViewedBy("viewer1"), is(true));
         assertThat(pipeline.canBeViewedBy("viewer2"), is(true));
 
         assertThat(pipeline.canBeViewedBy("some-other-user-not-in-viewers-list"), is(false));
         assertThat(pipeline.canBeViewedBy("admin"), is(false));
+    }
+
+    @Test
+    public void shouldSetTheLastUpdateTime() throws Exception {
+        ReliableTimestampProvider provider = mock(ReliableTimestampProvider.class);
+        when(provider.getNext()).thenReturn(1000L);
+        GoDashboardPipeline pipeline = new GoDashboardPipeline(new PipelineModel("pipeline1", false, false, notPaused()), null, "group1", provider);
+
+        assertThat(pipeline.getLastUpdatedTimeStamp(), is(1000L));
     }
 }
