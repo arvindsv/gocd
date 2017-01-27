@@ -22,6 +22,6 @@ module GoDashboardPipelineMother
   def dashboard_pipeline(pipeline_name, group_name = "group1", permissions = Permissions.new(Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE), timestamp = 1000)
     clock = double('Clock')
     clock.stub(:currentTimeMillis).and_return(timestamp)
-    GoDashboardPipeline.new(pipeline_model(pipeline_name, 'pipeline-label'), permissions, group_name, ReliableTimestampProvider.new(clock))
+    GoDashboardPipeline.new(pipeline_model(pipeline_name, 'pipeline-label'), permissions, group_name, TimeStampBasedCounter.new(clock))
   end
 end

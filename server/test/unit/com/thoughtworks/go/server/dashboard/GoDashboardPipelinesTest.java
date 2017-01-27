@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 public class GoDashboardPipelinesTest {
     @Test
     public void shouldSetLastUpdatedTime() {
-        ReliableTimestampProvider provider = mock(ReliableTimestampProvider.class);
+        TimeStampBasedCounter provider = mock(TimeStampBasedCounter.class);
         when(provider.getNext()).thenReturn(100L);
         GoDashboardPipelines goDashboardPipelines = new GoDashboardPipelines(Arrays.asList(), provider);
         assertThat(goDashboardPipelines.lastUpdatedTimeStamp(), is(100L));

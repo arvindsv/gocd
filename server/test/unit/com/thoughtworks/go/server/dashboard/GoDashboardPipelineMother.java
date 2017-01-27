@@ -30,6 +30,6 @@ public class GoDashboardPipelineMother {
 
     public static GoDashboardPipeline pipeline(String pipelineName, String groupName) {
         Permissions permissions = new Permissions(Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE);
-        return new GoDashboardPipeline(new PipelineModel(pipelineName, false, false, notPaused()), permissions, groupName, new ReliableTimestampProvider(new SystemTimeClock()));
+        return new GoDashboardPipeline(new PipelineModel(pipelineName, false, false, notPaused()), permissions, groupName, new TimeStampBasedCounter(new SystemTimeClock()));
     }
 }

@@ -105,7 +105,7 @@ public class GoDashboardServiceTest {
 
     @Test
     public void shouldRetrieveTheLatestKnownSetOfPipelinesFromTheCache() throws Exception {
-        GoDashboardPipelines cachedPipelines = new GoDashboardPipelines(asList(pipeline("pipeline1"), pipeline("pipeline2")), mock(ReliableTimestampProvider.class));
+        GoDashboardPipelines cachedPipelines = new GoDashboardPipelines(asList(pipeline("pipeline1"), pipeline("pipeline2")), mock(TimeStampBasedCounter.class));
         when(cache.allEntriesInOrder()).thenReturn(cachedPipelines);
 
         GoDashboardPipelines currentPipelines = service.allPipelinesForDashboard();

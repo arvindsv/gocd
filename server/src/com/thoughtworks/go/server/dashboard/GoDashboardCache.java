@@ -17,7 +17,6 @@
 package com.thoughtworks.go.server.dashboard;
 
 import com.thoughtworks.go.config.CaseInsensitiveString;
-import com.thoughtworks.go.util.TimeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +25,7 @@ import java.util.*;
 /* Understands how to cache dashboard statuses, for every pipeline. */
 @Component
 public class GoDashboardCache {
-    private final ReliableTimestampProvider reliableTimestampProvider;
+    private final TimeStampBasedCounter timeStampBasedCounter;
     /**
      * Assumption: The put() and replaceAllEntriesInCacheWith() methods, which change this cache,
      * will always be called from the same thread (queueProcessor in GoDashboardActivityListener). Even get() will be.
@@ -37,10 +36,10 @@ public class GoDashboardCache {
     private volatile GoDashboardPipelines dashboardPipelines;
 
     @Autowired
-    public GoDashboardCache(ReliableTimestampProvider reliableTimestampProvider) {
-        this.reliableTimestampProvider = reliableTimestampProvider;
+    public GoDashboardCache(TimeStampBasedCounter timeStampBasedCounter) {
+        this.timeStampBasedCounter = timeStampBasedCounter;
         cache = new LinkedHashMap<>();
-        dashboardPipelines = new GoDashboardPipelines(new ArrayList<>(), reliableTimestampProvider);
+        dashboardPipelines = new GoDashboardPipelines(new ArrayList<>(), timeStampBasedCounter);
     }
 
     public GoDashboardPipeline get(CaseInsensitiveString pipelineName) {
@@ -63,7 +62,7 @@ public class GoDashboardCache {
     }
 
     private void cacheHasChanged() {
-        dashboardPipelines = new GoDashboardPipelines(new ArrayList<>(cache.values()), reliableTimestampProvider);
+        dashboardPipelines = new GoDashboardPipelines(new ArrayList<>(cache.values()), timeStampBasedCounter);
     }
 
     private Map<CaseInsensitiveString, GoDashboardPipeline> createMapFor(List<GoDashboardPipeline> pipelines) {

@@ -17,7 +17,6 @@
 package com.thoughtworks.go.server.dashboard;
 
 import com.thoughtworks.go.config.CaseInsensitiveString;
-import com.thoughtworks.go.util.TimeProvider;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,7 +36,7 @@ public class GoDashboardCacheTest {
 
     @Before
     public void setUp() throws Exception {
-        cache = new GoDashboardCache(mock(ReliableTimestampProvider.class));
+        cache = new GoDashboardCache(mock(TimeStampBasedCounter.class));
     }
 
     @Test

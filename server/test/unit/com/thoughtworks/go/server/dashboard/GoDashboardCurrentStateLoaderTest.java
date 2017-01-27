@@ -82,7 +82,7 @@ public class GoDashboardCurrentStateLoaderTest {
     public void setUp() throws Exception {
         initMocks(this);
         loader = new GoDashboardCurrentStateLoader(pipelineSqlMapDao, triggerMonitor, pipelinePauseService,
-                pipelineLockService, pipelineUnlockApiService, schedulingCheckerService, permissionsAuthority, new ReliableTimestampProvider(mock(Clock.class)));
+                pipelineLockService, pipelineUnlockApiService, schedulingCheckerService, permissionsAuthority, new TimeStampBasedCounter(mock(Clock.class)));
 
         goConfigMother = new GoConfigMother();
         config = goConfigMother.defaultCruiseConfig();

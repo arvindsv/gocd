@@ -53,13 +53,13 @@ public class GoDashboardCurrentStateLoader {
     private PipelineUnlockApiService pipelineUnlockApiService;
     private SchedulingCheckerService schedulingCheckerService;
     private GoConfigPipelinePermissionsAuthority permissionsAuthority;
-    private ReliableTimestampProvider reliableTimestampProvider;
+    private TimeStampBasedCounter timeStampBasedCounter;
 
     @Autowired
     public GoDashboardCurrentStateLoader(PipelineDao pipelineDao, TriggerMonitor triggerMonitor,
-                            PipelinePauseService pipelinePauseService, PipelineLockService pipelineLockService,
-                            PipelineUnlockApiService pipelineUnlockApiService, SchedulingCheckerService schedulingCheckerService,
-                            GoConfigPipelinePermissionsAuthority permissionsAuthority, ReliableTimestampProvider reliableTimestampProvider) {
+                                         PipelinePauseService pipelinePauseService, PipelineLockService pipelineLockService,
+                                         PipelineUnlockApiService pipelineUnlockApiService, SchedulingCheckerService schedulingCheckerService,
+                                         GoConfigPipelinePermissionsAuthority permissionsAuthority, TimeStampBasedCounter timeStampBasedCounter) {
         this.pipelineDao = pipelineDao;
         this.triggerMonitor = triggerMonitor;
         this.pipelinePauseService = pipelinePauseService;
@@ -67,7 +67,7 @@ public class GoDashboardCurrentStateLoader {
         this.pipelineUnlockApiService = pipelineUnlockApiService;
         this.schedulingCheckerService = schedulingCheckerService;
         this.permissionsAuthority = permissionsAuthority;
-        this.reliableTimestampProvider = reliableTimestampProvider;
+        this.timeStampBasedCounter = timeStampBasedCounter;
     }
 
     public List<GoDashboardPipeline> allPipelines(CruiseConfig config) {
@@ -85,7 +85,7 @@ public class GoDashboardCurrentStateLoader {
                         Permissions permissions = permissionsFor(pipelineConfig, pipelinesAndTheirPermissions);
                         PipelineModel pipelineModel = pipelineModelFor(pipelineConfig, activeInstances);
 
-                        pipelines.add(new GoDashboardPipeline(pipelineModel, permissions, group.getGroup(), reliableTimestampProvider));
+                        pipelines.add(new GoDashboardPipeline(pipelineModel, permissions, group.getGroup(), timeStampBasedCounter));
                     }
                 });
             }
@@ -100,7 +100,7 @@ public class GoDashboardCurrentStateLoader {
         Permissions permissions = permissionsAuthority.permissionsForPipeline(pipelineConfig.name());
         PipelineModel pipelineModel = pipelineModelFor(pipelineConfig, activePipelineInstances);
 
-        return new GoDashboardPipeline(pipelineModel, permissions, groupConfig.getGroup(), reliableTimestampProvider);
+        return new GoDashboardPipeline(pipelineModel, permissions, groupConfig.getGroup(), timeStampBasedCounter);
     }
 
     private PipelineModel pipelineModelFor(PipelineConfig pipelineConfig, PipelineInstanceModels activeInstances) {

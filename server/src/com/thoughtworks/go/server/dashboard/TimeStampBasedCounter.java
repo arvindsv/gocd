@@ -21,16 +21,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ReliableTimestampProvider {
+public class TimeStampBasedCounter {
     private final long seed;
     private static long counter = 0;
 
     @Autowired
-    public ReliableTimestampProvider(Clock clock) {
+    public TimeStampBasedCounter(Clock clock) {
         this.seed = clock.currentTimeMillis();
     }
 
-    public long getNext() {
+    public synchronized long getNext() {
         counter++;
         return seed + counter;
     }

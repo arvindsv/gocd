@@ -22,9 +22,9 @@ public class GoDashboardPipelines {
     private List<GoDashboardPipeline> orderedEntries;
     private long lastUpdatedTimeStamp;
 
-    public GoDashboardPipelines(List<GoDashboardPipeline> orderedEntries, ReliableTimestampProvider reliableTimestampProvider) {
+    public GoDashboardPipelines(List<GoDashboardPipeline> orderedEntries, TimeStampBasedCounter timeStampBasedCounter) {
         this.orderedEntries = orderedEntries;
-        this.lastUpdatedTimeStamp = reliableTimestampProvider.getNext();
+        this.lastUpdatedTimeStamp = timeStampBasedCounter.getNext();
     }
 
     public List<GoDashboardPipeline> orderedEntries() {

@@ -38,7 +38,7 @@ public class GoDashboardPipelineTest {
                 new AllowedUsers(s("admin", "root")),
                 Everyone.INSTANCE);
 
-        GoDashboardPipeline pipeline = new GoDashboardPipeline(new PipelineModel("pipeline1", false, false, notPaused()), permissions, "group1", mock(ReliableTimestampProvider.class));
+        GoDashboardPipeline pipeline = new GoDashboardPipeline(new PipelineModel("pipeline1", false, false, notPaused()), permissions, "group1", mock(TimeStampBasedCounter.class));
 
         assertThat(pipeline.canBeViewedBy("viewer1"), is(true));
         assertThat(pipeline.canBeViewedBy("viewer2"), is(true));
@@ -49,7 +49,7 @@ public class GoDashboardPipelineTest {
 
     @Test
     public void shouldSetTheLastUpdateTime() throws Exception {
-        ReliableTimestampProvider provider = mock(ReliableTimestampProvider.class);
+        TimeStampBasedCounter provider = mock(TimeStampBasedCounter.class);
         when(provider.getNext()).thenReturn(1000L);
         GoDashboardPipeline pipeline = new GoDashboardPipeline(new PipelineModel("pipeline1", false, false, notPaused()), null, "group1", provider);
 
