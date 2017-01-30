@@ -20,7 +20,7 @@ module ApiV2
       alias_method :pipeline, :represented
 
       link :self do |opts|
-        opts[:url_builder].pipeline_history_url(pipeline.getName())
+        opts[:url_builder].pipeline_history_url(pipeline.name())
       end
 
       link :doc do
@@ -28,28 +28,29 @@ module ApiV2
       end
 
       link :settings_path do |opts|
-        opts[:url_builder].pipeline_edit_url(pipeline.getName(), current_tab: :'general')
+        opts[:url_builder].pipeline_edit_url(pipeline.name(), current_tab: :'general')
       end
 
       link :trigger do |opts|
-        opts[:url_builder].api_pipeline_action_url(pipeline.getName(), action: :'schedule')
+        opts[:url_builder].api_pipeline_action_url(pipeline.name(), action: :'schedule')
       end
 
       link :trigger_with_options do |opts|
-        opts[:url_builder].api_pipeline_action_url(pipeline.getName(), action: :'schedule')
+        opts[:url_builder].api_pipeline_action_url(pipeline.name(), action: :'schedule')
       end
 
       link :pause do |opts|
-        opts[:url_builder].pause_pipeline_url(pipeline.getName())
+        opts[:url_builder].pause_pipeline_url(pipeline.name())
       end
 
       link :unpause do |opts|
-        opts[:url_builder].unpause_pipeline_url(pipeline.getName())
+        opts[:url_builder].unpause_pipeline_url(pipeline.name())
       end
 
-      property :getName, as: :name
+      property :name, exec_context: :decorator
+      property :lastUpdatedTimeStamp, as: :last_updated_timestamp
       property :locked, exec_context: :decorator
-      property :getPausedInfo, as: :pause_info do
+      property :pause_info, exec_context: :decorator do
         property :paused, as: :paused
         property :pauseBy,
                  as:         :paused_by,
@@ -62,12 +63,20 @@ module ApiV2
       end
       collection :instances, embedded: true, exec_context: :decorator, decorator: PipelineInstanceRepresenter
 
+      def name
+        pipeline.name().toString()
+      end
+
+      def pause_info
+        pipeline.model().getPausedInfo()
+      end
+
       def locked
-        pipeline.getLatestPipelineInstance().isCurrentlyLocked
+        pipeline.model().getLatestPipelineInstance().isCurrentlyLocked
       end
 
       def instances
-        pipeline.getActivePipelineInstances().select do |pipeline_instance_model|
+        pipeline.model().getActivePipelineInstances().select do |pipeline_instance_model|
           !pipeline_instance_model.instance_of?(com.thoughtworks.go.presentation.pipelinehistory.EmptyPipelineInstanceModel)
         end
       end

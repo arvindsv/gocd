@@ -20,7 +20,9 @@ describe ApiV2::Dashboard::PipelineRepresenter do
   include PipelineModelMother
 
   it 'renders all pipeline groups with hal representation' do
-    pipeline    = pipeline_model('pipeline_name', 'pipeline_label')
+    counter = double('Counter')
+    counter.stub(:getNext).and_return(1)
+    pipeline    = GoDashboardPipeline.new(pipeline_model('pipeline_name', 'pipeline_label'), nil, "grp", counter)
     presenter   = ApiV2::Dashboard::PipelineRepresenter.new(pipeline)
     actual_json = presenter.to_hash(url_builder: UrlBuilder.new)
 
@@ -47,12 +49,12 @@ describe ApiV2::Dashboard::PipelineRepresenter do
     {
       name:       'pipeline_name',
       locked:     false,
+      last_updated_timestamp: 1,
       pause_info: {
         paused:    false,
         paused_by:    nil,
         pause_reason: nil
       }
-
     }
   end
 

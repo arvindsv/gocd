@@ -27,7 +27,7 @@ public class GoDashboardPipeline {
     private final String groupName;
     private final long lastUpdatedTimeStamp;
 
-    public GoDashboardPipeline(PipelineModel pipelineModel, Permissions permissions, String groupName, TimeStampBasedCounter timeStampBasedCounter) {
+    public GoDashboardPipeline(PipelineModel pipelineModel, Permissions permissions, String groupName, Counter timeStampBasedCounter) {
         this.pipelineModel = pipelineModel;
         this.permissions = permissions;
         this.groupName = groupName;

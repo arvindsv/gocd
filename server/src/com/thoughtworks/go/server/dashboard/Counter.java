@@ -16,23 +16,6 @@
 
 package com.thoughtworks.go.server.dashboard;
 
-import com.thoughtworks.go.util.Clock;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-@Component
-public class TimeStampBasedCounter implements Counter {
-    private final long seed;
-    private static long counter = 0;
-
-    @Autowired
-    public TimeStampBasedCounter(Clock clock) {
-        this.seed = clock.currentTimeMillis();
-    }
-
-    @Override
-    public synchronized long getNext() {
-        counter++;
-        return seed + counter;
-    }
+public interface Counter {
+    long getNext();
 }

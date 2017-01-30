@@ -36,7 +36,7 @@ module ApiV2
       end
  
       def pipelines
-        pipeline_group[:pipelines].collect {|pipeline| pipeline.model()}
+        pipeline_group[:pipelines]
       end
     end
   end

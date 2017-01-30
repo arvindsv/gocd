@@ -31,16 +31,12 @@ module ApiV2
       else
         pipelines_across_groups = all_pipelines_for_dashboard.orderedEntries()
         pipeline_selections = pipeline_selections_service.getSelectedPipelines(cookies[:selected_pipelines], current_user_entity_id)
-        should_redraw = true
         pipelines_viewable_by_user = pipelines_across_groups.select do |pipeline|
-          has_pipeline_been_updated_since_last_fetch = pipeline.lastUpdatedTimeStamp() > timestamp_from_request
-          should_redraw = should_redraw && has_pipeline_been_updated_since_last_fetch
           does_user_have_view_permissions = pipeline.canBeViewedBy(name_of_current_user)
           has_user_selected_the_pipeline_for_display = pipeline_selections.includesPipeline(pipeline.name())
-          does_user_have_view_permissions && has_user_selected_the_pipeline_for_display && has_pipeline_been_updated_since_last_fetch
+          does_user_have_view_permissions && has_user_selected_the_pipeline_for_display
         end
         presenters = Dashboard::PipelineGroupsRepresenter.new(pipelines_viewable_by_user)
-        status = should_redraw ? 200 : 206
         presenters_to_hash = presenters.to_hash(url_builder: self)
 
         render DEFAULT_FORMAT => presenters_to_hash, status: status
