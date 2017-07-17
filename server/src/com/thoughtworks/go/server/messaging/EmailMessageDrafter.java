@@ -95,15 +95,15 @@ public class EmailMessageDrafter {
                         targetFolder), adminMail);
     }
 
-    public static SendEmailMessage backupSuccessfullyCompletedMessage(String backupDir, String adminEmail, Username username) {
-        String ipAddress = SystemUtil.getFirstLocalNonLoopbackIpAddress();
-        String body = String.format("Backup of the Go server at '%s' was successfully completed. The backup is stored at location: %s. This backup was triggered by '%s'.", ipAddress, backupDir, username.getUsername().toString());
-        return new SendEmailMessage("Server Backup Completed Successfully", body, adminEmail);
+    public static SendEmailMessage backupSuccessfullyCompletedMessage(String serverNameOrIP, String backupDir, String adminEmail, Username username) {
+        String body = String.format("Backup of the GoCD server at '%s' was successfully completed. The backup is stored at location: %s. This backup was triggered by '%s'.",
+                serverNameOrIP, backupDir, username.getUsername().toString());
+        return new SendEmailMessage("GoCD Server - Backup Completed Successfully", body, adminEmail);
     }
 
-    public static SendEmailMessage backupFailedMessage(String exceptionMessage, String adminEmail) {
-        String ipAddress = SystemUtil.getFirstLocalNonLoopbackIpAddress();
-        return new SendEmailMessage("Server Backup Failed",String.format("Backup of the Go server at '%s' has failed. The reason is: %s", ipAddress, exceptionMessage),adminEmail);
+    public static SendEmailMessage backupFailedMessage(String serverNameOrIP, String exceptionMessage, String adminEmail) {
+        return new SendEmailMessage("GoCD Server - Backup Failed",String.format("Backup of the GoCD server at '%s' has failed. The reason is: %s",
+                serverNameOrIP, exceptionMessage),adminEmail);
     }
 
     public static SendEmailMessage agentLostContact(AgentInstance agentInstance, Set<String> environments, final String adminEmail) {

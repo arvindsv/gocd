@@ -77,13 +77,13 @@ public class BackupServiceH2IntegrationTest {
     GoConfigDao goConfigDao;
     @Autowired
     ServerBackupRepository backupInfoRepository;
-    @Autowired TimeProvider timeProvider;
     @Autowired Localizer localizer;
     @Autowired SystemEnvironment systemEnvironment;
     @Autowired ServerVersion serverVersion;
     @Autowired ConfigRepository configRepository;
     @Autowired Database databaseStrategy;
     @Autowired BackupService backupService;
+    @Autowired private ServerConfigService serverConfigService;
 
     private GoConfigFileHelper configHelper = new GoConfigFileHelper();
 
@@ -130,7 +130,7 @@ public class BackupServiceH2IntegrationTest {
         HttpLocalizedOperationResult result = new HttpLocalizedOperationResult();
 
         BackupService service = new BackupService(dataSource, artifactsDirHolder, goConfigService, timeProvider, backupInfoRepository, systemEnvironment, serverVersion, configRepository,
-                databaseStrategy);
+                databaseStrategy, serverConfigService);
         service.initialize();
         service.startBackup(admin, result);
 

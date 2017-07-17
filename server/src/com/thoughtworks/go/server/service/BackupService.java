@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +45,7 @@ import com.thoughtworks.go.server.web.BackupStatusProvider;
 import com.thoughtworks.go.serverhealth.HealthStateType;
 import com.thoughtworks.go.service.ConfigRepository;
 import com.thoughtworks.go.util.SystemEnvironment;
+import com.thoughtworks.go.util.SystemUtil;
 import com.thoughtworks.go.util.TimeProvider;
 import com.thoughtworks.go.util.VoidThrowingFn;
 import org.apache.commons.io.DirectoryWalker;
@@ -81,10 +83,12 @@ public class BackupService implements BackupStatusProvider {
     private static final String CONFIG_REPOSITORY_BACKUP_ZIP = "config-repo.zip";
     private static final String VERSION_BACKUP_FILE = "version.txt";
     private static final String BACKUP_MUTEX = "GO-SERVER-BACKUP-IN-PROGRESS".intern();
+    private final ServerConfigService serverConfigService;
 
     @Autowired
     public BackupService(DataSource dataSource, ArtifactsDirHolder artifactsDirHolder, GoConfigService goConfigService, TimeProvider timeProvider,
-                         ServerBackupRepository serverBackupRepository, SystemEnvironment systemEnvironment, ServerVersion serverVersion, ConfigRepository configRepository, Database databaseStrategy) {
+                         ServerBackupRepository serverBackupRepository, SystemEnvironment systemEnvironment, ServerVersion serverVersion,
+                         ConfigRepository configRepository, Database databaseStrategy, ServerConfigService serverConfigService) {
         this.dataSource = dataSource;
         this.artifactsDirHolder = artifactsDirHolder;
         this.goConfigService = goConfigService;
@@ -94,6 +98,7 @@ public class BackupService implements BackupStatusProvider {
         this.configRepository = configRepository;
         this.databaseStrategy = databaseStrategy;
         this.timeProvider = timeProvider;
+        this.serverConfigService = serverConfigService;
     }
 
     public void initialize() {
@@ -126,19 +131,30 @@ public class BackupService implements BackupStatusProvider {
                 backupDb(destDir);
                 ServerBackup serverBackup = new ServerBackup(destDir.getAbsolutePath(), now.toDate(), username.getUsername().toString());
                 serverBackupRepository.save(serverBackup);
-                mailSender.send(EmailMessageDrafter.backupSuccessfullyCompletedMessage(destDir.getAbsolutePath(), goConfigService.adminEmail(), username));
+
+                mailSender.send(EmailMessageDrafter.backupSuccessfullyCompletedMessage(serverNameOrIP(), destDir.getAbsolutePath(), goConfigService.adminEmail(), username));
                 result.setMessage(LocalizedMessage.string("BACKUP_COMPLETED_SUCCESSFULLY"));
                 return serverBackup;
             } catch (Exception e) {
                 FileUtils.deleteQuietly(destDir);
                 result.badRequest(LocalizedMessage.string("BACKUP_UNSUCCESSFUL", e.getMessage()));
                 LOGGER.error("[Backup] Failed to backup Go.", e);
-                mailSender.send(EmailMessageDrafter.backupFailedMessage(e.getMessage(), goConfigService.adminEmail()));
+                mailSender.send(EmailMessageDrafter.backupFailedMessage(serverNameOrIP(), e.getMessage(), goConfigService.adminEmail()));
             } finally {
                 backupRunningSince = null;
                 backupStartedBy = null;
             }
             return null;
+        }
+    }
+
+    private String serverNameOrIP() {
+        String ipAddress = SystemUtil.getFirstLocalNonLoopbackIpAddress();
+
+        try {
+            return serverConfigService.siteUrlFor("http://" + ipAddress, true);
+        } catch (URISyntaxException e) {
+            return ipAddress;
         }
     }
 

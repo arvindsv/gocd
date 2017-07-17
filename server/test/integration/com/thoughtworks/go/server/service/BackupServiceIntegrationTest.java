@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,13 +30,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.sql.DataSource;
 
-import com.thoughtworks.go.config.CaseInsensitiveString;
-import com.thoughtworks.go.config.GoConfigDao;
-import com.thoughtworks.go.config.GoMailSender;
-import com.thoughtworks.go.config.ServerConfig;
+import com.thoughtworks.go.config.*;
 import com.thoughtworks.go.config.materials.SubprocessExecutionContext;
 import com.thoughtworks.go.config.materials.git.GitMaterial;
 import com.thoughtworks.go.database.Database;
+import com.thoughtworks.go.domain.ServerSiteUrlConfig;
 import com.thoughtworks.go.domain.materials.Modification;
 import com.thoughtworks.go.domain.materials.mercurial.StringRevision;
 import com.thoughtworks.go.domain.materials.RevisionContext;
@@ -90,6 +89,7 @@ import static org.mockito.Mockito.when;
 })
 public class BackupServiceIntegrationTest {
 
+    public static final String SECURE_SITE_URL = "https://some-secure-site-url";
     @Autowired BackupService backupService;
     @Autowired
     GoConfigService goConfigService;
@@ -107,6 +107,7 @@ public class BackupServiceIntegrationTest {
     @Autowired ConfigRepository configRepository;
     @Autowired private SubprocessExecutionContext subprocessExecutionContext;
     @Autowired Database databaseStrategy;
+    @Autowired private ServerConfigService serverConfigService;
 
     private GoConfigFileHelper configHelper = new GoConfigFileHelper();
 
@@ -120,6 +121,7 @@ public class BackupServiceIntegrationTest {
         configHelper.onSetUp();
         dbHelper.onSetUp();
         admin = new Username(new CaseInsensitiveString("admin"));
+        configHelper.setBaseUrls(new ServerSiteUrlConfig("http://some-site-url"), new ServerSiteUrlConfig(SECURE_SITE_URL));
         configHelper.enableSecurity();
         configHelper.addAdmins(CaseInsensitiveString.str(admin.getUsername()));
         goConfigDao.forceReload();
@@ -213,7 +215,7 @@ public class BackupServiceIntegrationTest {
         HttpLocalizedOperationResult result = new HttpLocalizedOperationResult();
         ServerVersion serverVersion = mock(ServerVersion.class);
         when(serverVersion.version()).thenReturn("some-test-version-007");
-        BackupService backupService = new BackupService(dataSource, artifactsDirHolder, goConfigService, timeProvider, backupInfoRepository, systemEnvironment, serverVersion, configRepository, databaseStrategy);
+        BackupService backupService = new BackupService(dataSource, artifactsDirHolder, goConfigService, timeProvider, backupInfoRepository, systemEnvironment, serverVersion, configRepository, databaseStrategy, serverConfigService);
         backupService.initialize();
         backupService.startBackup(admin, result);
         assertThat(result.isSuccessful(), is(true));
@@ -235,14 +237,13 @@ public class BackupServiceIntegrationTest {
         when(timeProvider.currentDateTime()).thenReturn(now);
 
         BackupService service = new BackupService(dataSource, artifactsDirHolder, configService, timeProvider, backupInfoRepository, systemEnvironment, serverVersion, configRepository,
-                databaseStrategy);
+                databaseStrategy, serverConfigService);
         service.initialize();
         service.startBackup(admin, new HttpLocalizedOperationResult());
 
-        String ipAddress = SystemUtil.getFirstLocalNonLoopbackIpAddress();
-        String body = String.format("Backup of the Go server at '%s' was successfully completed. The backup is stored at location: %s. This backup was triggered by 'admin'.", ipAddress, backupDir(now).getAbsolutePath());
+        String body = String.format("Backup of the GoCD server at '%s' was successfully completed. The backup is stored at location: %s. This backup was triggered by 'admin'.", SECURE_SITE_URL, backupDir(now).getAbsolutePath());
 
-        verify(goMailSender).send(new SendEmailMessage("Server Backup Completed Successfully", body, "mail@admin.com"));
+        verify(goMailSender).send(new SendEmailMessage("GoCD Server - Backup Completed Successfully", body, "mail@admin.com"));
         verifyNoMoreInteractions(goMailSender);
     }
 
@@ -264,16 +265,15 @@ public class BackupServiceIntegrationTest {
         Database databaseStrategyMock = mock(Database.class);
         doThrow(new RuntimeException("Oh no!")).when(databaseStrategyMock).backup(any(File.class));
         BackupService service = new BackupService(dataSource, artifactsDirHolder, configService, timeProvider, backupInfoRepository, systemEnvironment, serverVersion, configRepository,
-                databaseStrategyMock);
+                databaseStrategyMock, serverConfigService);
         service.initialize();
         service.startBackup(admin, result);
 
-        String ipAddress = SystemUtil.getFirstLocalNonLoopbackIpAddress();
-        String body = String.format("Backup of the Go server at '%s' has failed. The reason is: %s", ipAddress, "Oh no!");
+        String body = String.format("Backup of the GoCD server at '%s' has failed. The reason is: %s", SECURE_SITE_URL, "Oh no!");
 
         assertThat(result.isSuccessful(), is(false));
         assertThat(result.message(localizer), is("Failed to perform backup. Reason: Oh no!"));
-        verify(goMailSender).send(new SendEmailMessage("Server Backup Failed", body, "mail@admin.com"));
+        verify(goMailSender).send(new SendEmailMessage("GoCD Server - Backup Failed", body, "mail@admin.com"));
         verifyNoMoreInteractions(goMailSender);
 
         assertThat(FileUtils.listFiles(backupsDirectory, TrueFileFilter.TRUE, TrueFileFilter.TRUE).isEmpty(), is(true));
@@ -405,7 +405,7 @@ public class BackupServiceIntegrationTest {
 
 
         final BackupService backupService = new BackupService(dataSource, artifactsDirHolder, goConfigService, new TimeProvider(), backupInfoRepository, systemEnvironment,
-                serverVersion, configRepository, databaseStrategyMock);
+                serverVersion, configRepository, databaseStrategyMock, serverConfigService);
 
         waitForBackupToBegin.acquire();
         Thread thd = new Thread(new Runnable() {
