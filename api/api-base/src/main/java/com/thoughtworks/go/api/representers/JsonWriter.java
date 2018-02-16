@@ -32,7 +32,7 @@ public class JsonWriter {
         this.requestContext = requestContext;
         this.properties = new LinkedHashMap<>();
         this.links = new ArrayList<>();
-        this.embedded = new HashMap<>();
+        this.embedded = new LinkedHashMap<>();
     }
 
     public JsonWriter add(String propertyName, Object value) {
