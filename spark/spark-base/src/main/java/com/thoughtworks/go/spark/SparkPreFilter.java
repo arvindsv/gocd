@@ -18,8 +18,10 @@ package com.thoughtworks.go.spark;
 
 import com.thoughtworks.go.server.util.ServletHelper;
 import com.thoughtworks.go.spark.spring.Application;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
+import spark.http.matching.MatcherFilter;
 import spark.servlet.SparkApplication;
 import spark.servlet.SparkFilter;
 
@@ -27,6 +29,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -75,7 +78,14 @@ public class SparkPreFilter extends SparkFilter {
         servletHelper = ServletHelper.getInstance();
         this.wac = WebApplicationContextUtils.getWebApplicationContext(config.getServletContext());
         super.init(config);
-    }
+
+        Field matcherFilterField = ReflectionUtils.findField(SparkPreFilter.class, "matcherFilter");
+        matcherFilterField.setAccessible(true);
+        MatcherFilter matcherFilter = (MatcherFilter) ReflectionUtils.getField(matcherFilterField, this);
+
+        Field hasOtherHandlers = ReflectionUtils.findField(MatcherFilter.class, "hasOtherHandlers");
+        hasOtherHandlers.setAccessible(true);
+        ReflectionUtils.setField(hasOtherHandlers, matcherFilter, Boolean.TRUE);    }
 
     @Override
     protected SparkApplication[] getApplications(FilterConfig filterConfig) throws ServletException {
