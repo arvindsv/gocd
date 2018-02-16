@@ -16,6 +16,8 @@
 
 package com.thoughtworks.go.apiv2.dashboard.representers
 
+import com.google.gson.Gson
+import com.thoughtworks.go.api.representers.JsonOutputWriter
 import com.thoughtworks.go.config.CaseInsensitiveString
 import com.thoughtworks.go.config.security.Permissions
 import com.thoughtworks.go.config.security.users.Everyone
@@ -27,10 +29,10 @@ import com.thoughtworks.go.server.domain.Username
 import com.thoughtworks.go.spark.mocks.TestRequestContext
 import com.thoughtworks.go.spark.util.SecureRandom
 import com.thoughtworks.go.util.Clock
-import net.javacrumbs.jsonunit.fluent.JsonFluentAssert
 import org.junit.jupiter.api.Test
 
 import static com.thoughtworks.go.apiv2.dashboard.PipelineModelMother.pipeline_model
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
 
@@ -46,7 +48,7 @@ class PipelineGroupRepresenterTest {
   ]
 
   @Test
-  void 'renders pipeline group with hal representation'() {
+  void 'OLD JSON: renders pipeline group with hal representation'() {
     def permissions = new Permissions(Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE)
     def pipeline1 = dashboardPipeline('pipeline1')
     def pipeline2 = dashboardPipeline('pipeline2')
@@ -56,7 +58,55 @@ class PipelineGroupRepresenterTest {
     pipelineGroup.addPipeline(pipeline2)
 
     def actual_json = PipelineGroupRepresenter.toJSON(pipelineGroup, new TestRequestContext(), new Username("someone"))
-    JsonFluentAssert.assertThatJson(actual_json).isEqualTo([
+    assertThatJson(actual_json).isEqualTo([
+      _links        : expectedLinks,
+      name          : 'group1',
+      pipelines     : ['pipeline1', 'pipeline2'],
+      can_administer: true
+    ])
+  }
+
+  @Test
+  void 'OLD JSON: renders pipeline group authorization information'() {
+    def noAdminPermissions = new Permissions(Everyone.INSTANCE, Everyone.INSTANCE, NoOne.INSTANCE, Everyone.INSTANCE)
+
+    def pipeline1 = dashboardPipeline('pipeline1')
+    def pipeline2 = dashboardPipeline('pipeline2')
+
+    def pipelineGroup = new GoDashboardPipelineGroup('group1', noAdminPermissions)
+    pipelineGroup.addPipeline(pipeline1)
+    pipelineGroup.addPipeline(pipeline2)
+
+    def json = PipelineGroupRepresenter.toJSON(pipelineGroup, new TestRequestContext(),
+      new Username(new CaseInsensitiveString(SecureRandom.hex())))
+
+    assertThatJson(json).isEqualTo([
+      _links        : expectedLinks,
+      name          : 'group1',
+      pipelines     : ['pipeline1', 'pipeline2'],
+      can_administer: false
+    ])
+  }
+
+  @Test
+  void 'renders pipeline group with hal representation'() {
+    def permissions = new Permissions(Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE)
+    def pipeline1 = dashboardPipeline('pipeline1')
+    def pipeline2 = dashboardPipeline('pipeline2')
+
+    def pipelineGroup = new GoDashboardPipelineGroup('group1', permissions)
+    pipelineGroup.addPipeline(pipeline1)
+    pipelineGroup.addPipeline(pipeline2)
+
+    def username = new Username("someone")
+
+    def result = new StringWriter()
+    new JsonOutputWriter(result, new TestRequestContext()).forTopLevelObject { writer ->
+      PipelineGroupRepresenter.newToJSON(writer, pipelineGroup, username)
+    }
+    def actualJson = new Gson().fromJson(result.toString(), Map.class)
+
+    assertThatJson(actualJson).isEqualTo([
       _links        : expectedLinks,
       name          : 'group1',
       pipelines     : ['pipeline1', 'pipeline2'],
@@ -75,10 +125,15 @@ class PipelineGroupRepresenterTest {
     pipelineGroup.addPipeline(pipeline1)
     pipelineGroup.addPipeline(pipeline2)
 
-    def json = PipelineGroupRepresenter.toJSON(pipelineGroup, new TestRequestContext(),
-      new Username(new CaseInsensitiveString(SecureRandom.hex())))
+    def username = new Username(new CaseInsensitiveString(SecureRandom.hex()))
 
-    JsonFluentAssert.assertThatJson(json).isEqualTo([
+    def result = new StringWriter()
+    new JsonOutputWriter(result, new TestRequestContext()).forTopLevelObject { writer ->
+      PipelineGroupRepresenter.newToJSON(writer, pipelineGroup, username)
+    }
+    def actualJson = new Gson().fromJson(result.toString(), Map.class)
+
+    assertThatJson(actualJson).isEqualTo([
       _links        : expectedLinks,
       name          : 'group1',
       pipelines     : ['pipeline1', 'pipeline2'],

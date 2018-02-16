@@ -17,6 +17,7 @@
 package com.thoughtworks.go.apiv2.dashboard.representers;
 
 import com.thoughtworks.go.api.representers.JsonWriter;
+import com.thoughtworks.go.api.representers.OutputWriter;
 import com.thoughtworks.go.domain.materials.Modification;
 import com.thoughtworks.go.domain.materials.dependency.DependencyMaterialRevision;
 import com.thoughtworks.go.spark.RequestContext;
@@ -41,5 +42,23 @@ public class PipelineDependencyModificationRepresenter {
                 .addIfNotNull("revision", model.getRevision())
                 .addIfNotNull("modified_time", model.getModifiedTime())
                 .addIfNotNull("pipeline_label", model.getPipelineLabel()).getAsMap();
+    }
+
+    public static void newToJSON(OutputWriter jsonOutputWriter, Modification model, DependencyMaterialRevision latestRevision) {
+        jsonOutputWriter
+                .addLinks((linksWriter) -> {
+                    linksWriter
+                            .addLink("vsm", Routes.PipelineInstance.vsm(
+                                    latestRevision.getPipelineName(),
+                                    latestRevision.getPipelineCounter()))
+                            .addLink("stage_details_url", Routes.Stage.stageDetailTab(
+                                    latestRevision.getPipelineName(),
+                                    latestRevision.getPipelineCounter(),
+                                    latestRevision.getStageName(),
+                                    latestRevision.getStageCounter()));
+                })
+                .addIfNotNull("revision", model.getRevision())
+                .addIfNotNull("modified_time", model.getModifiedTime())
+                .addIfNotNull("pipeline_label", model.getPipelineLabel());
     }
 }

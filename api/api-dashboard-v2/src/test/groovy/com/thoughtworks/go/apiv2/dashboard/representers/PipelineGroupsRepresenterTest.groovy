@@ -16,6 +16,8 @@
 
 package com.thoughtworks.go.apiv2.dashboard.representers
 
+import com.google.gson.Gson
+import com.thoughtworks.go.api.representers.JsonOutputWriter
 import com.thoughtworks.go.apiv2.dashboard.GoDashboardPipelineMother
 import com.thoughtworks.go.config.CaseInsensitiveString
 import com.thoughtworks.go.config.security.Permissions
@@ -31,7 +33,7 @@ import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson
 class PipelineGroupsRepresenterTest {
 
   @Test
-  void 'renders pipeline dashboard with hal representation'() {
+  void 'OLD JSON: renders pipeline dashboard with hal representation'() {
     def user = new Username(new CaseInsensitiveString(SecureRandom.hex()))
     def permissions = new Permissions(Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE)
 
@@ -54,11 +56,60 @@ class PipelineGroupsRepresenterTest {
     ])
 
     assertThatJson(actual_json._embedded.pipeline_groups).isEqualTo([
+      expected_old_embedded_pipeline_groups(pipeline_group1, user),
+      expected_old_embedded_pipeline_groups(pipeline_group2, user),
+    ])
+
+    assertThatJson(actual_json._embedded.pipelines).isEqualTo([
+      expected_old_embedded_pipeline(pipeline1_in_group1, user),
+      expected_old_embedded_pipeline(pipeline2_in_group1, user),
+      expected_old_embedded_pipeline(pipeline3_in_group2, user),
+    ])
+  }
+
+  /* For "OLD JSON" tests. Remove later. */
+  private static def expected_old_embedded_pipeline_groups(model, user) {
+    PipelineGroupRepresenter.toJSON(model, new TestRequestContext(), user)
+  }
+
+  /* For "OLD JSON" tests. Remove later. */
+  private static def expected_old_embedded_pipeline(model, user) {
+    PipelineRepresenter.toJSON(model, new TestRequestContext(), user)
+  }
+
+  @Test
+  void 'renders pipeline dashboard with hal representation'() {
+    def user = new Username(new CaseInsensitiveString(SecureRandom.hex()))
+    def permissions = new Permissions(Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE, Everyone.INSTANCE)
+
+    def pipeline_group1 = new GoDashboardPipelineGroup('group1', permissions)
+    def pipeline_group2 = new GoDashboardPipelineGroup('group2', permissions)
+
+    def pipeline1_in_group1 = GoDashboardPipelineMother.dashboardPipeline('pipeline1')
+    def pipeline2_in_group1 = GoDashboardPipelineMother.dashboardPipeline('pipeline2')
+    def pipeline3_in_group2 = GoDashboardPipelineMother.dashboardPipeline('pipeline2')
+
+    pipeline_group1.addPipeline(pipeline1_in_group1)
+    pipeline_group1.addPipeline(pipeline2_in_group1)
+    pipeline_group2.addPipeline(pipeline3_in_group2)
+
+    def result = new StringWriter()
+    new JsonOutputWriter(result, new TestRequestContext()).forTopLevelObject { writer ->
+      PipelineGroupsRepresenter.newToJSON(writer, [pipeline_group1, pipeline_group2], user)
+    }
+    def actualJson = new Gson().fromJson(result.toString(), Map.class)
+
+    assertThatJson(actualJson._links).isEqualTo([
+      self: [href: "http://test.host/go/api/dashboard"],
+      doc : [href: "https://api.go.cd/current/#dashboard"]
+    ])
+
+    assertThatJson(actualJson._embedded.pipeline_groups).isEqualTo([
       expected_embedded_pipeline_groups(pipeline_group1, user),
       expected_embedded_pipeline_groups(pipeline_group2, user),
     ])
 
-    assertThatJson(actual_json._embedded.pipelines).isEqualTo([
+    assertThatJson(actualJson._embedded.pipelines).isEqualTo([
       expected_embedded_pipeline(pipeline1_in_group1, user),
       expected_embedded_pipeline(pipeline2_in_group1, user),
       expected_embedded_pipeline(pipeline3_in_group2, user),
@@ -66,10 +117,18 @@ class PipelineGroupsRepresenterTest {
   }
 
   private static def expected_embedded_pipeline_groups(model, user) {
-    PipelineGroupRepresenter.toJSON(model, new TestRequestContext(), user)
+    def result = new StringWriter()
+    new JsonOutputWriter(result, new TestRequestContext()).forTopLevelObject { writer ->
+      PipelineGroupRepresenter.newToJSON(writer, model, user)
+    }
+    return new Gson().fromJson(result.toString(), Map.class)
   }
 
   private static def expected_embedded_pipeline(model, user) {
-    PipelineRepresenter.toJSON(model, new TestRequestContext(), user)
+    def result = new StringWriter()
+    new JsonOutputWriter(result, new TestRequestContext()).forTopLevelObject { writer ->
+      PipelineRepresenter.newToJSON(writer, model, user)
+    }
+    return new Gson().fromJson(result.toString(), Map.class)
   }
 }

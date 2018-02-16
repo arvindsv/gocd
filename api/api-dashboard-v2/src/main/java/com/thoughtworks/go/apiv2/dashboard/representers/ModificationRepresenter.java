@@ -17,6 +17,7 @@
 package com.thoughtworks.go.apiv2.dashboard.representers;
 
 import com.thoughtworks.go.api.representers.JsonWriter;
+import com.thoughtworks.go.api.representers.OutputWriter;
 import com.thoughtworks.go.domain.materials.Material;
 import com.thoughtworks.go.domain.materials.Modification;
 import com.thoughtworks.go.spark.RequestContext;
@@ -39,4 +40,15 @@ public class ModificationRepresenter {
                 .getAsMap();
     }
 
+    public static void newToJSON(OutputWriter jsonOutputWriter, Modification model, Material material) {
+        jsonOutputWriter
+                .addLinks(linksWriter -> {
+                    linksWriter.addLink("vsm", Routes.Materials.vsm(material.getFingerprint(), model.getRevision()));
+                })
+                .addIfNotNull("user_name", model.getUserName())
+                .addIfNotNull("email_address", model.getEmailAddress())
+                .addIfNotNull("revision", model.getRevision())
+                .addIfNotNull("modified_time", model.getModifiedTime())
+                .addIfNotNull("comment", model.getComment());
+    }
 }

@@ -17,6 +17,7 @@
 package com.thoughtworks.go.apiv2.dashboard.representers;
 
 import com.thoughtworks.go.api.representers.JsonWriter;
+import com.thoughtworks.go.api.representers.OutputWriter;
 import com.thoughtworks.go.server.dashboard.GoDashboardPipelineGroup;
 import com.thoughtworks.go.server.domain.Username;
 import com.thoughtworks.go.spark.RequestContext;
@@ -51,4 +52,30 @@ public class PipelineGroupsRepresenter {
                 .collect(Collectors.toList());
     }
 
+    public static void newToJSON(OutputWriter jsonOutputWriter, List<GoDashboardPipelineGroup> pipelineGroups, Username username) {
+        jsonOutputWriter
+                .addLinks(linksWriter -> {
+                    linksWriter
+                            .addLink("self", Routes.Dashboard.SELF)
+                            .addAbsoluteLink("doc", Routes.Dashboard.DOC);
+                })
+                .addChild("_embedded", childWriter -> {
+                    childWriter
+                            .addChildList("pipeline_groups", listWriter -> {
+                                pipelineGroups.forEach(pipelineGroup -> {
+                                    listWriter.addChild(childItemWriter -> {
+                                        PipelineGroupRepresenter.newToJSON(childItemWriter, pipelineGroup, username);
+                                    });
+                                });
+                            })
+
+                            .addChildList("pipelines", listWriter -> {
+                                pipelineGroups.stream()
+                                        .flatMap(pipelineGroup -> pipelineGroup.allPipelines().stream())
+                                        .forEach(pipeline -> {
+                                            listWriter.addChild(childItemWriter -> PipelineRepresenter.newToJSON(childItemWriter, pipeline, username));
+                                        });
+                            });
+                });
+    }
 }

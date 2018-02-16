@@ -17,6 +17,7 @@
 package com.thoughtworks.go.apiv2.dashboard.representers;
 
 import com.thoughtworks.go.api.representers.JsonWriter;
+import com.thoughtworks.go.api.representers.OutputWriter;
 import com.thoughtworks.go.presentation.pipelinehistory.StageInstanceModel;
 import com.thoughtworks.go.spark.RequestContext;
 import com.thoughtworks.go.spark.Routes;
@@ -43,5 +44,23 @@ public class StageRepresenter {
         }
 
         return jsonWriter.getAsMap();
+    }
+
+    public static void newToJSON(OutputWriter jsonOutputWriter, StageInstanceModel model, String pipelineName, String pipelineCounter) {
+        jsonOutputWriter
+                .addLinks(linkWriter -> {
+                    linkWriter.addLink("self", Routes.Stage.self(pipelineName, pipelineCounter, model.getName(), model.getCounter()));
+                })
+                .add("name", model.getName())
+                .add("counter", model.getCounter())
+                .add("status", model.getState().name())
+                .add("approved_by", model.getApprovedBy())
+                .add("scheduled_at", model.getScheduledDate());
+
+        if (model.getPreviousStage() != null) {
+            jsonOutputWriter.addChild("previous_stage", childWriter -> {
+                StageRepresenter.newToJSON(childWriter, model.getPreviousStage(), pipelineName, pipelineCounter);
+            });
+        }
     }
 }

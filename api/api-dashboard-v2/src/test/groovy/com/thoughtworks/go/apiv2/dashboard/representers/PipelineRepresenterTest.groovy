@@ -16,6 +16,8 @@
 
 package com.thoughtworks.go.apiv2.dashboard.representers
 
+import com.google.gson.Gson
+import com.thoughtworks.go.api.representers.JsonOutputWriter
 import com.thoughtworks.go.config.CaseInsensitiveString
 import com.thoughtworks.go.config.TrackingTool
 import com.thoughtworks.go.config.security.Permissions
@@ -38,7 +40,7 @@ import static org.mockito.Mockito.when
 class PipelineRepresenterTest {
 
   @Test
-  void 'renders pipeline with hal representation'() {
+  void 'OLD JSON: renders pipeline with hal representation'() {
     def counter = mock(Counter.class)
     when(counter.getNext()).thenReturn(Long.valueOf(1))
     def permissions = new Permissions(NoOne.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE)
@@ -57,7 +59,7 @@ class PipelineRepresenterTest {
       ],
       _embedded             : [
         instances: [
-          expectedEmbeddedPipeline(pipeline.model().activePipelineInstances.first())
+          oldExpectedEmbeddedPipeline(pipeline.model().activePipelineInstances.first())
         ]
       ],
       name                  : 'pipeline_name',
@@ -79,8 +81,106 @@ class PipelineRepresenterTest {
     ])
   }
 
+  /* For "OLD JSON" tests. Remove later. */
+  private static def oldExpectedEmbeddedPipeline(PipelineInstanceModel pipelineInstanceModel) {
+    PipelineInstanceRepresenter.toJSON(pipelineInstanceModel, new TestRequestContext())
+  }
+
+  @Test
+  void 'renders pipeline with hal representation'() {
+    def counter = mock(Counter.class)
+    when(counter.getNext()).thenReturn(Long.valueOf(1))
+    def permissions = new Permissions(NoOne.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE)
+    def pipeline = new GoDashboardPipeline(pipeline_model('pipeline_name', 'pipeline_label'),
+      permissions, "grp", new TrackingTool("http://example.com/\${ID}", "##\\d+"), counter)
+    def username = new Username(new CaseInsensitiveString(SecureRandom.hex()))
+
+    def result = new StringWriter()
+    new JsonOutputWriter(result, new TestRequestContext()).forTopLevelObject { writer ->
+      PipelineRepresenter.newToJSON(writer, pipeline, username)
+    }
+    def json = new Gson().fromJson(result.toString(), Map.class)
+
+    assertThatJson(json).isEqualTo([
+      _links                : [
+        self                : [href: 'http://test.host/go/api/pipelines/pipeline_name/history'],
+        doc                 : [href: 'https://api.go.cd/current/#pipelines'],
+        settings_path       : [href: 'http://test.host/go/admin/pipelines/pipeline_name/general'],
+        trigger             : [href: 'http://test.host/go/api/pipelines/pipeline_name/schedule'],
+        trigger_with_options: [href: 'http://test.host/go/api/pipelines/pipeline_name/schedule'],
+        unpause             : [href: 'http://test.host/go/api/pipelines/pipeline_name/unpause'],
+        pause               : [href: 'http://test.host/go/api/pipelines/pipeline_name/pause'],
+      ],
+      _embedded             : [
+        instances: [
+          expectedEmbeddedPipeline(pipeline.model().activePipelineInstances.first())
+        ]
+      ],
+      name                  : 'pipeline_name',
+      locked                : false,
+      last_updated_timestamp: Double.valueOf("1.0"),
+      pause_info            : [
+        paused      : false,
+        paused_by   : null,
+        pause_reason: null
+      ],
+      can_operate           : false,
+      can_administer        : false,
+      can_unlock            : false,
+      can_pause             : false,
+      tracking_tool         : [
+        "regex": "##\\d+",
+        "link" : "http://example.com/\${ID}"
+      ]
+    ])
+  }
+
   @Nested
   class Authorization {
+
+    @Test
+    void 'OLD JSON: user can operate a pipeline if user is pipeline_level operator'() {
+      def counter = mock(Counter.class)
+      when(counter.getNext()).thenReturn(Long.valueOf(1))
+      def permissions = new Permissions(NoOne.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE, Everyone.INSTANCE)
+      def pipeline = new GoDashboardPipeline(pipeline_model('pipeline_name', 'pipeline_label'), permissions, "grp", counter)
+      def actualJson = PipelineRepresenter.toJSON(pipeline, new TestRequestContext(), new Username(new CaseInsensitiveString(SecureRandom.hex())))
+
+      actualJson.remove("_links")
+      actualJson.remove("_embedded")
+      def expectedJson = old_pipelines_hash()
+      expectedJson.can_operate = true
+      assertThatJson(actualJson).isEqualTo(expectedJson)
+    }
+
+    @Test
+    void 'OLD JSON: user can administer a pipeline if user is admin of pipeline'() {
+      def counter = mock(Counter.class)
+      when(counter.getNext()).thenReturn(Long.valueOf(1))
+      def permissions = new Permissions(NoOne.INSTANCE, NoOne.INSTANCE, Everyone.INSTANCE, NoOne.INSTANCE)
+      def pipeline = new GoDashboardPipeline(pipeline_model('pipeline_name', 'pipeline_label'), permissions, "grp", counter)
+      def actualJson = PipelineRepresenter.toJSON(pipeline, new TestRequestContext(), new Username(new CaseInsensitiveString(SecureRandom.hex())))
+      actualJson.remove("_links")
+      actualJson.remove("_embedded")
+      def expectedJson = old_pipelines_hash()
+      expectedJson.can_administer = true
+      assertThatJson(actualJson).isEqualTo(expectedJson)
+    }
+
+    @Test
+    void 'OLD JSON: user can unlock and pause a pipeline if user is operator of pipeline'() {
+      def counter = mock(Counter.class)
+      when(counter.getNext()).thenReturn(Long.valueOf(1))
+      def permissions = new Permissions(NoOne.INSTANCE, Everyone.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE)
+      def pipeline = new GoDashboardPipeline(pipeline_model('pipeline_name', 'pipeline_label'), permissions, "grp", counter)
+      def actualJson = PipelineRepresenter.toJSON(pipeline, new TestRequestContext(), new Username(new CaseInsensitiveString(SecureRandom.hex())))
+      actualJson.remove("_links")
+      actualJson.remove("_embedded")
+      def expectedJson = old_pipelines_hash()
+      expectedJson.can_unlock = true
+      expectedJson.can_pause = true
+      assertThatJson(actualJson).isEqualTo(expectedJson)
+    }
 
     @Test
     void 'user can operate a pipeline if user is pipeline_level operator'() {
@@ -88,7 +188,13 @@ class PipelineRepresenterTest {
       when(counter.getNext()).thenReturn(Long.valueOf(1))
       def permissions = new Permissions(NoOne.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE, Everyone.INSTANCE)
       def pipeline = new GoDashboardPipeline(pipeline_model('pipeline_name', 'pipeline_label'), permissions, "grp", counter)
-      def actualJson = PipelineRepresenter.toJSON(pipeline, new TestRequestContext(), new Username(new CaseInsensitiveString(SecureRandom.hex())))
+      def username = new Username(new CaseInsensitiveString(SecureRandom.hex()))
+
+      def result = new StringWriter()
+      new JsonOutputWriter(result, new TestRequestContext()).forTopLevelObject { writer ->
+        PipelineRepresenter.newToJSON(writer, pipeline, username)
+      }
+      def actualJson = new Gson().fromJson(result.toString(), Map.class)
 
       actualJson.remove("_links")
       actualJson.remove("_embedded")
@@ -103,7 +209,14 @@ class PipelineRepresenterTest {
       when(counter.getNext()).thenReturn(Long.valueOf(1))
       def permissions = new Permissions(NoOne.INSTANCE, NoOne.INSTANCE, Everyone.INSTANCE, NoOne.INSTANCE)
       def pipeline = new GoDashboardPipeline(pipeline_model('pipeline_name', 'pipeline_label'), permissions, "grp", counter)
-      def actualJson = PipelineRepresenter.toJSON(pipeline, new TestRequestContext(), new Username(new CaseInsensitiveString(SecureRandom.hex())))
+      def username = new Username(new CaseInsensitiveString(SecureRandom.hex()))
+
+      def result = new StringWriter()
+      new JsonOutputWriter(result, new TestRequestContext()).forTopLevelObject { writer ->
+        PipelineRepresenter.newToJSON(writer, pipeline, username)
+      }
+      def actualJson = new Gson().fromJson(result.toString(), Map.class)
+
       actualJson.remove("_links")
       actualJson.remove("_embedded")
       def expectedJson = pipelines_hash()
@@ -117,7 +230,14 @@ class PipelineRepresenterTest {
       when(counter.getNext()).thenReturn(Long.valueOf(1))
       def permissions = new Permissions(NoOne.INSTANCE, Everyone.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE)
       def pipeline = new GoDashboardPipeline(pipeline_model('pipeline_name', 'pipeline_label'), permissions, "grp", counter)
-      def actualJson = PipelineRepresenter.toJSON(pipeline, new TestRequestContext(), new Username(new CaseInsensitiveString(SecureRandom.hex())))
+      def username = new Username(new CaseInsensitiveString(SecureRandom.hex()))
+
+      def result = new StringWriter()
+      new JsonOutputWriter(result, new TestRequestContext()).forTopLevelObject { writer ->
+        PipelineRepresenter.newToJSON(writer, pipeline, username)
+      }
+      def actualJson = new Gson().fromJson(result.toString(), Map.class)
+
       actualJson.remove("_links")
       actualJson.remove("_embedded")
       def expectedJson = pipelines_hash()
@@ -128,14 +248,36 @@ class PipelineRepresenterTest {
   }
 
   private static def expectedEmbeddedPipeline(PipelineInstanceModel pipelineInstanceModel) {
-    PipelineInstanceRepresenter.toJSON(pipelineInstanceModel, new TestRequestContext())
+    def result = new StringWriter()
+    new JsonOutputWriter(result, new TestRequestContext()).forTopLevelObject { writer ->
+      PipelineInstanceRepresenter.newToJSON(writer, pipelineInstanceModel)
+    }
+    return new Gson().fromJson(result.toString(), Map.class)
+  }
+
+  /* For "OLD JSON" tests. Remove later. */
+  private static def old_pipelines_hash() {
+    return [
+      name                  : 'pipeline_name',
+      locked                : false,
+      last_updated_timestamp: 1,
+      pause_info            : [
+        paused      : false,
+        paused_by   : null,
+        pause_reason: null
+      ],
+      can_operate           : false,
+      can_administer        : false,
+      can_unlock            : false,
+      can_pause             : false
+    ]
   }
 
   private static def pipelines_hash() {
     return [
       name                  : 'pipeline_name',
       locked                : false,
-      last_updated_timestamp: 1,
+      last_updated_timestamp: Double.valueOf("1.0"),
       pause_info            : [
         paused      : false,
         paused_by   : null,

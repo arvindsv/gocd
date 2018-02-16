@@ -17,6 +17,7 @@
 package com.thoughtworks.go.apiv2.dashboard.representers;
 
 import com.thoughtworks.go.api.representers.JsonWriter;
+import com.thoughtworks.go.api.representers.OutputWriter;
 import com.thoughtworks.go.domain.buildcause.BuildCause;
 import com.thoughtworks.go.spark.RequestContext;
 
@@ -42,4 +43,17 @@ public class BuildCauseRepresenter {
         return materialRevisions;
     }
 
+    public static void newToJSON(OutputWriter jsonOutputWriter, BuildCause model) {
+        jsonOutputWriter
+                .add("approver", model.getApprover())
+                .add("is_forced", model.isForced())
+                .add("trigger_message", model.getBuildCauseMessage())
+                .addChildList("material_revisions", listWriter -> {
+                    model.getMaterialRevisions().forEach(materialRevision -> {
+                        listWriter.addChild(childWriter -> {
+                            MaterialRevisionRepresenter.newToJSON(childWriter, materialRevision);
+                        });
+                    });
+                });
+    }
 }

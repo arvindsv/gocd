@@ -16,13 +16,16 @@
 
 package com.thoughtworks.go.apiv2.dashboard.representers;
 
+import com.thoughtworks.go.api.representers.JsonOutputWriter;
 import com.thoughtworks.go.api.representers.JsonWriter;
+import com.thoughtworks.go.api.representers.OutputWriter;
 import com.thoughtworks.go.presentation.pipelinehistory.PipelineInstanceModel;
 import com.thoughtworks.go.spark.RequestContext;
 import com.thoughtworks.go.spark.Routes;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
 
@@ -55,4 +58,36 @@ public class PipelineInstanceRepresenter {
                 .collect(toList());
     }
 
+
+
+    public static void newToJSON(OutputWriter jsonOutputWriter, PipelineInstanceModel model) {
+        jsonOutputWriter
+                .addLinks(addLinks(model))
+                .add("label", model.getLabel())
+                .add("counter", model.getCounter())
+                .add("triggered_by", model.getApprovedByForDisplay())
+                .add("scheduled_at", model.getScheduledDate())
+                .addChild("build_cause", childWriter -> { BuildCauseRepresenter.newToJSON(childWriter, model.getBuildCause()); })
+                .addChild("_embedded", childWriter -> {
+                    childWriter.addChildList("stages", getStages(model));
+                });
+    }
+
+    private static Consumer<OutputWriter.OutputLinkWriter> addLinks(PipelineInstanceModel model) {
+        return linkWriter -> {
+            linkWriter
+                    .addLink("self", Routes.Pipeline.instance(model.getName(), model.getCounter()))
+                    .addLink("compare_url", Routes.PipelineInstance.compare(model.getName(), model.getCounter() - 1, model.getCounter()))
+                    .addLink("history_url", Routes.Pipeline.history(model.getName()))
+                    .addLink("vsm_url", Routes.PipelineInstance.vsm(model.getName(), model.getCounter()));
+        };
+    }
+
+    private static Consumer<OutputWriter.OutputListWriter> getStages(PipelineInstanceModel model) {
+        return writer -> {
+            model.getStageHistory().forEach(stage -> {
+                writer.addChild(childWriter -> { StageRepresenter.newToJSON(childWriter, stage, model.getName(), String.valueOf(model.getCounter())); });
+            });
+        };
+    }
 }

@@ -17,6 +17,7 @@
 package com.thoughtworks.go.apiv2.dashboard.representers;
 
 import com.thoughtworks.go.api.representers.JsonWriter;
+import com.thoughtworks.go.api.representers.OutputWriter;
 import com.thoughtworks.go.server.dashboard.GoDashboardPipelineGroup;
 import com.thoughtworks.go.server.domain.Username;
 import com.thoughtworks.go.spark.RequestContext;
@@ -36,5 +37,17 @@ public class PipelineGroupRepresenter {
                 .add("name", model.getName())
                 .add("pipelines", model.allPipelineNames())
                 .add("can_administer", model.canBeAdministeredBy(username.getUsername().toString())).getAsMap();
+    }
+
+    public static void newToJSON(OutputWriter jsonOutputWriter, GoDashboardPipelineGroup model, Username username) {
+        jsonOutputWriter
+                .addLinks(linksWriter -> {
+                    linksWriter
+                            .addAbsoluteLink("doc", Routes.PipelineGroup.DOC)
+                            .addLink("self", Routes.PipelineGroup.SELF);
+                })
+                .add("name", model.getName())
+                .addChildList("pipelines", model.allPipelineNames())
+                .add("can_administer", model.canBeAdministeredBy(username.getUsername().toString()));
     }
 }

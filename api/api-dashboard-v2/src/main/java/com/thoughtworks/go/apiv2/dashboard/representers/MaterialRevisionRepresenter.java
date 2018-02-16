@@ -16,7 +16,9 @@
 
 package com.thoughtworks.go.apiv2.dashboard.representers;
 
+import com.thoughtworks.go.api.representers.JsonOutputWriter;
 import com.thoughtworks.go.api.representers.JsonWriter;
+import com.thoughtworks.go.api.representers.OutputWriter;
 import com.thoughtworks.go.domain.MaterialRevision;
 import com.thoughtworks.go.domain.materials.dependency.DependencyMaterialRevision;
 import com.thoughtworks.go.spark.RequestContext;
@@ -41,4 +43,24 @@ public class MaterialRevisionRepresenter {
                 }).collect(toList())).getAsMap();
     }
 
+    public static void newToJSON(OutputWriter jsonOutputWriter, MaterialRevision model) {
+        jsonOutputWriter
+                .add("material_type", model.getMaterialType())
+                .add("material_name", model.getMaterialName())
+                .add("changed", model.isChanged())
+                .addChildList("modifications", listWriter -> {
+                   model.getModifications().forEach(modification -> {
+
+                       listWriter.addChild(childWriter -> {
+                           if ("Pipeline".equals(model.getMaterial().getTypeForDisplay())) {
+                               //copied from ruby: not typesafe, can be improved
+                               PipelineDependencyModificationRepresenter.newToJSON(jsonOutputWriter, modification, (DependencyMaterialRevision) model.getRevision());
+                           } else {
+                               ModificationRepresenter.newToJSON(jsonOutputWriter, modification, model.getMaterial());
+                           }
+                       });
+
+                   });
+                });
+    }
 }
