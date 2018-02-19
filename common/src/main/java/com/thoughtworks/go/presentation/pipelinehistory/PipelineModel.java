@@ -16,7 +16,10 @@
 
 package com.thoughtworks.go.presentation.pipelinehistory;
 
+import com.thoughtworks.go.config.TrackingTool;
 import com.thoughtworks.go.domain.PipelinePauseInfo;
+
+import java.util.Optional;
 
 public class PipelineModel {
 
@@ -26,6 +29,7 @@ public class PipelineModel {
     private boolean canAdminister = false;
     private final PipelinePauseInfo pipelinePauseInfo;
     private final PipelineInstanceModels activePipelineInstances;
+    private TrackingTool trackingTool;
 
 
     public PipelineModel(String pipelineName, boolean canForce, boolean canOperate, PipelinePauseInfo pipelinePauseInfo) {
@@ -134,5 +138,13 @@ public class PipelineModel {
     public PipelineModel updateAdministrability(boolean value) {
         canAdminister = value;
         return this;
+    }
+
+    public void setTrackingTool(TrackingTool trackingTool) {
+        this.trackingTool = trackingTool;
+    }
+
+    public Optional<TrackingTool> getTrackingTool() {
+        return Optional.ofNullable(trackingTool);
     }
 }

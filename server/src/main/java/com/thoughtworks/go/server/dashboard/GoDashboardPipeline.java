@@ -28,19 +28,13 @@ public class GoDashboardPipeline {
     private final PipelineModel pipelineModel;
     private final Permissions permissions;
     private final String groupName;
-    private final TrackingTool trackingTool;
     private final long lastUpdatedTimeStamp;
 
-    public GoDashboardPipeline(PipelineModel pipelineModel, Permissions permissions, String groupName, TrackingTool trackingTool, Counter timeStampBasedCounter) {
+    public GoDashboardPipeline(PipelineModel pipelineModel, Permissions permissions, String groupName, Counter timeStampBasedCounter) {
         this.pipelineModel = pipelineModel;
         this.permissions = permissions;
         this.groupName = groupName;
-        this.trackingTool = trackingTool;
         this.lastUpdatedTimeStamp = timeStampBasedCounter.getNext();
-    }
-
-    public GoDashboardPipeline(PipelineModel pipelineModel, Permissions permissions, String groupName, Counter timeStampBasedCounter) {
-        this(pipelineModel, permissions, groupName, null, timeStampBasedCounter);
     }
 
     public String groupName() {
@@ -53,10 +47,6 @@ public class GoDashboardPipeline {
 
     public Permissions permissions() {
         return permissions;
-    }
-
-    public Optional<TrackingTool> getTrackingTool() {
-        return Optional.ofNullable(trackingTool);
     }
 
     public CaseInsensitiveString name() {

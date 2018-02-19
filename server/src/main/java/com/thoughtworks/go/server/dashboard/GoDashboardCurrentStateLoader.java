@@ -85,12 +85,7 @@ public class GoDashboardCurrentStateLoader {
                     public void visit(PipelineConfig pipelineConfig) {
                         Permissions permissions = permissionsFor(pipelineConfig, pipelinesAndTheirPermissions);
                         PipelineModel pipelineModel = pipelineModelFor(pipelineConfig, activeInstances);
-                        Optional<TrackingTool> trackingTool = pipelineConfig.getIntegratedTrackingTool();
-                        if (trackingTool.isPresent()) {
-                            pipelines.add(new GoDashboardPipeline(pipelineModel, permissions, group.getGroup(), trackingTool.get(), timeStampBasedCounter));
-                        } else {
-                            pipelines.add(new GoDashboardPipeline(pipelineModel, permissions, group.getGroup(), timeStampBasedCounter));
-                        }
+                        pipelines.add(new GoDashboardPipeline(pipelineModel, permissions, group.getGroup(), timeStampBasedCounter));
                     }
                 });
             }
@@ -104,12 +99,7 @@ public class GoDashboardCurrentStateLoader {
 
         Permissions permissions = permissionsAuthority.permissionsForPipeline(pipelineConfig.name());
         PipelineModel pipelineModel = pipelineModelFor(pipelineConfig, activePipelineInstances);
-        Optional<TrackingTool> trackingTool = pipelineConfig.getIntegratedTrackingTool();
-        if (trackingTool.isPresent()) {
-            return new GoDashboardPipeline(pipelineModel, permissions, groupConfig.getGroup(), trackingTool.get(), timeStampBasedCounter);
-        } else {
-            return new GoDashboardPipeline(pipelineModel, permissions, groupConfig.getGroup(), timeStampBasedCounter);
-        }
+        return new GoDashboardPipeline(pipelineModel, permissions, groupConfig.getGroup(), timeStampBasedCounter);
     }
 
     private PipelineModel pipelineModelFor(PipelineConfig pipelineConfig, PipelineInstanceModels activeInstances) {
@@ -120,6 +110,7 @@ public class GoDashboardCurrentStateLoader {
 
         PipelineModel pipelineModel = new PipelineModel(pipelineName, canBeForced, true, pauseInfo);
         pipelineModel.updateAdministrability(pipelineConfig.isLocal());
+        pipelineModel.setTrackingTool(pipelineConfig.getIntegratedTrackingTool().orElse(null));
 
         pipelineModel.addPipelineInstances(instancesFor(pipelineConfig, activeInstances));
         return pipelineModel;

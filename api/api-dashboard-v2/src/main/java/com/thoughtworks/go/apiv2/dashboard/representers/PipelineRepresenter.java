@@ -81,7 +81,7 @@ public class PipelineRepresenter {
     }
 
     private static Optional<Map> getTrackingToolInfo(GoDashboardPipeline model) {
-        return model.getTrackingTool()
+        return model.model().getTrackingTool()
                 .map(trackingTool -> new JsonWriter(null)
                         .add("regex", trackingTool.getRegex())
                         .add("link", trackingTool.getLink())

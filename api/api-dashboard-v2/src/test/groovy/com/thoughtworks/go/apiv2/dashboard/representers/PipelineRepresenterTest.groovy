@@ -43,7 +43,7 @@ class PipelineRepresenterTest {
     when(counter.getNext()).thenReturn(Long.valueOf(1))
     def permissions = new Permissions(NoOne.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE, NoOne.INSTANCE)
     def pipeline = new GoDashboardPipeline(pipeline_model('pipeline_name', 'pipeline_label'),
-      permissions, "grp", new TrackingTool("http://example.com/\${ID}", "##\\d+"), counter)
+      permissions, "grp", counter)
     def json = PipelineRepresenter.toJSON(pipeline, new TestRequestContext(), new Username(new CaseInsensitiveString(SecureRandom.hex())))
     assertThatJson(json).isEqualTo([
       _links                : [

@@ -16,6 +16,7 @@
 
 package com.thoughtworks.go.apiv2.dashboard
 
+import com.thoughtworks.go.config.TrackingTool
 import com.thoughtworks.go.domain.JobResult
 import com.thoughtworks.go.domain.JobState
 import com.thoughtworks.go.domain.MaterialRevisions
@@ -45,6 +46,7 @@ class PipelineModelMother {
     }
     pipeline_model.getLatestPipelineInstance().setMaterialRevisionsOnBuildCause(revisions)
     pipeline_model.updateAdministrability(can_administer)
+    pipeline_model.setTrackingTool(new TrackingTool("http://example.com/\${ID}", "##\\d+"))
     pipeline_model
   }
 

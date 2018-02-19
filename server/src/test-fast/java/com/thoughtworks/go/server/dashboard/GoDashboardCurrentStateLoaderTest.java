@@ -377,7 +377,7 @@ public class GoDashboardCurrentStateLoaderTest {
 
         List<GoDashboardPipeline> models = loader.allPipelines(config);
 
-        assertThat(models.get(0).getTrackingTool(), is(Optional.of(trackingTool)));
+        assertThat(models.get(0).model().getTrackingTool(), is(Optional.of(trackingTool)));
     }
 
     @Test
@@ -390,7 +390,7 @@ public class GoDashboardCurrentStateLoaderTest {
 
         GoDashboardPipeline model = loader.pipelineFor(p1Config, config.findGroup("group1"));
 
-        assertThat(model.getTrackingTool(), is(Optional.of(trackingTool)));
+        assertThat(model.model().getTrackingTool(), is(Optional.of(trackingTool)));
     }
 
     @Test
@@ -403,7 +403,7 @@ public class GoDashboardCurrentStateLoaderTest {
 
         List<GoDashboardPipeline> models = loader.allPipelines(config);
 
-        assertThat(models.get(0).getTrackingTool(), is(Optional.of(mingleConfig.asTrackingTool())));
+        assertThat(models.get(0).model().getTrackingTool(), is(Optional.of(mingleConfig.asTrackingTool())));
     }
 
     @Test
@@ -416,7 +416,7 @@ public class GoDashboardCurrentStateLoaderTest {
 
         GoDashboardPipeline model = loader.pipelineFor(p1Config, config.findGroup("group1"));
 
-        assertThat(model.getTrackingTool(), is(Optional.of(mingleConfig.asTrackingTool())));
+        assertThat(model.model().getTrackingTool(), is(Optional.of(mingleConfig.asTrackingTool())));
     }
 
     private void assertModel(GoDashboardPipeline pipeline, String group, PipelineInstanceModel... pims) {
