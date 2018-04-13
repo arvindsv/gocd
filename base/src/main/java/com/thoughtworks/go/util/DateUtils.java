@@ -40,7 +40,7 @@ public class DateUtils {
         if (date == null) {
             return null;
         }
-        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(date);
+        return formatter.withZoneUTC().print(date.getTime());
     }
 
     public static String formatRFC822(Date date) {
