@@ -72,7 +72,7 @@ public class ProjectStatusTest {
 
         assertThat(status.xmlRepresentation(),
                 is("<Project name=\"name\" activity=\"activity1\" lastBuildStatus=\"build-status-1\" lastBuildLabel=\"build-label-1\" " +
-                        "lastBuildTime=\"2010-05-23T00:00:00\" webUrl=\"__SITE_URL_PREFIX__/web-url\" />"));
+                        "lastBuildTime=\"2010-05-22T22:00:00Z\" webUrl=\"__SITE_URL_PREFIX__/web-url\" />"));
     }
 
     @Test
@@ -82,7 +82,7 @@ public class ProjectStatusTest {
 
         assertThat(status.xmlRepresentation(),
                 is("<Project name=\"name\" activity=\"activity1\" lastBuildStatus=\"build-status-1\" lastBuildLabel=\"build-label-1\" " +
-                        "lastBuildTime=\"2010-05-23T00:00:00\" webUrl=\"__SITE_URL_PREFIX__/web-url\">" +
+                        "lastBuildTime=\"2010-05-22T22:00:00Z\" webUrl=\"__SITE_URL_PREFIX__/web-url\">" +
                         "<messages><message text=\"breaker1, breaker2\" kind=\"Breakers\" /></messages></Project>"));
     }
 

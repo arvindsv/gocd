@@ -113,7 +113,7 @@ public class CcTrayServiceTest {
 
         assertThat(xml, is("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<Projects>\n" +
-                "  <Project name=\"proj1\" activity=\"activity1\" lastBuildStatus=\"build-status-1\" lastBuildLabel=\"build-label-1\" lastBuildTime=\"2010-05-23T00:00:00\" webUrl=\"" + "prefix1" + "/web-url\" />\n" +
+                "  <Project name=\"proj1\" activity=\"activity1\" lastBuildStatus=\"build-status-1\" lastBuildLabel=\"build-label-1\" lastBuildTime=\"2010-05-22T22:00:00Z\" webUrl=\"" + "prefix1" + "/web-url\" />\n" +
                 "</Projects>"));
     }
 
@@ -126,7 +126,7 @@ public class CcTrayServiceTest {
     private void assertCcTrayXmlFor(String actualXml, final String siteUrlPrefix, final String... projects) {
         StringBuilder expectedXml = new StringBuilder("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Projects>\n");
         for (String project : projects) {
-            expectedXml.append("  <Project name=\"").append(project).append("\" activity=\"activity1\" lastBuildStatus=\"build-status-1\" lastBuildLabel=\"build-label-1\" lastBuildTime=\"2010-05-23T00:00:00\" webUrl=\"" + siteUrlPrefix + "/web-url\" />\n");
+            expectedXml.append("  <Project name=\"").append(project).append("\" activity=\"activity1\" lastBuildStatus=\"build-status-1\" lastBuildLabel=\"build-label-1\" lastBuildTime=\"2010-05-22T22:00:00Z\" webUrl=\"" + siteUrlPrefix + "/web-url\" />\n");
         }
         expectedXml.append("</Projects>");
 
