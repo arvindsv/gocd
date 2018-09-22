@@ -92,22 +92,23 @@ module Admin
           end
           @pluggable_task_service.validate(@task) if @task.instance_of? com.thoughtworks.go.config.pluggabletask.PluggableTask
           @pluggable_task_service.validate(@task.cancelTask()) if (!@task.cancelTask().nil?) && (@task.cancelTask().instance_of? com.thoughtworks.go.config.pluggabletask.PluggableTask)
+
+          ## BUG here as well: @task will be of type FetchTaskAdapter
           if @task.instance_of? com.thoughtworks.go.config.FetchPluggableArtifactTask
             stage_parent_config = stageParentConfig
             if stage_parent_config
               # need not call validate on oncancel task as it can't be fetch task from the UI.
               # The task or the config is not preprocessed. So, it may be that for some cases, the plugin validations are deferred to runtime
               @external_artifacts_service.validateFetchExternalArtifactTask(@task, stage_parent_config, @go_config_service.getCurrentConfig())
-
             end
           end
         end
 
         def stageParentConfig
           if 'pipelines'.eql?(@stage_parent)
-            parent_config = go_config_service.pipelineConfigNamed(CaseInsensitiveString.new(@pipeline_or_template_name))
+            parent_config = @go_config_service.pipelineConfigNamed(CaseInsensitiveString.new(@pipeline_or_template_name))
           else
-            parent_config = go_config_service.templateConfigNamed(CaseInsensitiveString.new(@pipeline_or_template_name))
+            parent_config = @go_config_service.templateConfigNamed(CaseInsensitiveString.new(@pipeline_or_template_name))
           end
           parent_config
         end
@@ -171,22 +172,23 @@ module Admin
           task.setConfigAttributes(params[:task], @task_view_service)
           @pluggable_task_service.validate(task) if task.instance_of? com.thoughtworks.go.config.pluggabletask.PluggableTask
           @pluggable_task_service.validate(task.cancelTask()) if (!task.cancelTask().nil?) && (task.cancelTask().instance_of? com.thoughtworks.go.config.pluggabletask.PluggableTask)
-          if @task.instance_of? com.thoughtworks.go.config.FetchPluggableArtifactTask
+          if task.instance_of? com.thoughtworks.go.config.FetchPluggableArtifactTask
             stage_parent_config = stageParentConfig
             if stage_parent_config
               # need not call validate on oncancel task as it can't be fetch task from the UI.
               # The task or the config is not preprocessed. So, it may be that for some cases, the plugin validations are deferred to runtime
-              @external_artifacts_service.validateFetchExternalArtifactTask(@task, stage_parent_config, @go_config_service.getCurrentConfig())
+              @external_artifacts_service.validateFetchExternalArtifactTask(task, stage_parent_config, @go_config_service.getCurrentConfig())
             end
           end
+
           job.getTasks().replace(task_index, task)
         end
 
         def stageParentConfig
           if 'pipelines'.eql?(@stage_parent)
-            parent_config = go_config_service.pipelineConfigNamed(CaseInsensitiveString.new(@pipeline_or_template_name))
+            parent_config = @go_config_service.pipelineConfigNamed(CaseInsensitiveString.new(@pipeline_or_template_name))
           else
-            parent_config = go_config_service.templateConfigNamed(CaseInsensitiveString.new(@pipeline_or_template_name))
+            parent_config = @go_config_service.templateConfigNamed(CaseInsensitiveString.new(@pipeline_or_template_name))
           end
           parent_config
         end
