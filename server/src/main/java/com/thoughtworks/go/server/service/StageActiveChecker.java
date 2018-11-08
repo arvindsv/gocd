@@ -33,11 +33,12 @@ public class StageActiveChecker implements SchedulingChecker {
 
     public void check(OperationResult result) {
         HealthStateType healthStateType = HealthStateType.general(HealthStateScope.forPipeline(pipelineName));
-        if (stageService.isStageActive(pipelineName, stageName)) {
-            String message = String.format("Failed to trigger pipeline [%s]", pipelineName);
-            result.conflict(message, String.format("Stage [%s] in pipeline [%s] is still in progress", stageName, pipelineName), healthStateType);
-        } else {
-            result.success(healthStateType);
-        }
+        result.success(healthStateType);
+//        if (stageService.isStageActive(pipelineName, stageName)) {
+//            String message = String.format("Failed to trigger pipeline [%s]", pipelineName);
+//            result.conflict(message, String.format("Stage [%s] in pipeline [%s] is still in progress", stageName, pipelineName), healthStateType);
+//        } else {
+//            result.success(healthStateType);
+//        }
     }
 }

@@ -384,9 +384,9 @@ public class ScheduleService {
         if (!nextStage.supportAutoApproval()) {
             return;
         }
-        if (isStageActive(pipeline, nextStage)) {
-            return;
-        }
+//        if (isStageActive(pipeline, nextStage)) {
+//            return;
+//        }
         scheduleStage(pipeline, CaseInsensitiveString.str(nextStage.name()), approvedBy, new NewStageInstanceCreator(goConfigService), new ExceptioningErrorHandler());
     }
 
