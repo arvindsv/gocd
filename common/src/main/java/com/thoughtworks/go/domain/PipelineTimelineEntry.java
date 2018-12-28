@@ -27,189 +27,38 @@ import static com.thoughtworks.go.util.ExceptionUtils.bomb;
 /**
  * @understands a pipeline which can be compared based on its material checkin (natural) order
  */
-public class PipelineTimelineEntry implements Comparable {
-    private final String pipelineName;
-    private final long id;
-    private final int counter;
-    private final Map<String, List<Revision>> revisions;
-    private PipelineTimelineEntry insertedBefore;
-    private PipelineTimelineEntry insertedAfter;
-    private double naturalOrder = 0.0;
-    private boolean hasBeenUpdated;
+public interface PipelineTimelineEntry {
+    int compareTo(Object o);
 
-    public PipelineTimelineEntry(String pipelineName, long id, int counter, Map<String, List<Revision>> revisions) {
-        this.pipelineName = pipelineName;
-        this.id = id;
-        this.counter = counter;
-        this.revisions = revisions;
-    }
+    int getCounter();
 
-    public PipelineTimelineEntry(String pipelineName, long id, Integer counter, Map<String, List<Revision>> revisions, double naturalOrder) {
-        this(pipelineName, id, counter, revisions);
-        this.naturalOrder = naturalOrder;
-    }
+    PipelineTimelineEntry insertedBefore();
 
-    public int compareTo(Object o) {
-        if (o == null) {
-            throw new NullPointerException("Cannot compare this object with null");
-        }
-        if (o.getClass() != this.getClass()) {
-            throw new RuntimeException("Cannot compare '" + o + "' with '" + this + "'");
-        }
-        if (this.equals(o)) {
-            return 0;
-        }
+    PipelineTimelineEntry insertedAfter();
 
-        PipelineTimelineEntry that = (PipelineTimelineEntry) o;
-        Map<Date, TreeSet<Integer>> earlierMods = new HashMap<>();
+    void setInsertedBefore(PipelineTimelineEntry insertedBefore);
 
-        for (String materialFlyweight : revisions.keySet()) {
-            List<Revision> thisRevs = this.revisions.get(materialFlyweight);
-            List<Revision> thatRevs = that.revisions.get(materialFlyweight);
-            if (thisRevs == null || thatRevs == null) {
-                continue;
-            }
-            Revision thisRevision = thisRevs.get(0);
-            Revision thatRevision = thatRevs.get(0);
-            if (thisRevision == null || thatRevision == null) {
-                continue;
-            }
-            Date thisDate = thisRevision.date;
-            Date thatDate = thatRevision.date;
-            if (thisDate.equals(thatDate)) {
-                continue;
-            }
-            populateEarlierModification(earlierMods, thisDate, thatDate);
-        }
-        if (earlierMods.isEmpty()) {
-            return counter < that.counter ? -1 : 1;
-        }
-        TreeSet<Date> sortedModDate = new TreeSet<>(earlierMods.keySet());
-        if (hasContentionOnEarliestMod(earlierMods, sortedModDate.first())) {
-            return counter < that.counter ? -1 : 1;
-        }
-        return earlierMods.get(sortedModDate.first()).first();
-    }
+    void setInsertedAfter(PipelineTimelineEntry insertedAfter);
 
-    public int getCounter() {
-        return counter;
-    }
+    String getPipelineName();
 
-    private void populateEarlierModification(Map<Date, TreeSet<Integer>> earlierMods, Date thisDate, Date thatDate) {
-        int value = thisDate.before(thatDate) ? -1 : 1;
-        Date actual = thisDate.before(thatDate) ? thisDate : thatDate;
-        if (!earlierMods.containsKey(actual)) {
-            earlierMods.put(actual, new TreeSet<>());
-        }
-        earlierMods.get(actual).add(value);
-    }
+    Long getId();
 
-    private boolean hasContentionOnEarliestMod(Map<Date, TreeSet<Integer>> earlierMods, Date earliestModDate) {
-        return earlierMods.get(earliestModDate).size() > 1;
-    }
+    PipelineTimelineEntry previous();
 
-    public PipelineTimelineEntry insertedBefore() {
-        return insertedBefore;
-    }
+    double naturalOrder();
 
-    public PipelineTimelineEntry insertedAfter() {
-        return insertedAfter;
-    }
+    void updateNaturalOrder();
 
-    public void setInsertedBefore(PipelineTimelineEntry insertedBefore) {
-        if (this.insertedBefore != null) {
-            throw bomb("cannot change insertedBefore for: " + this + " with " + insertedBefore);
-        }
-        this.insertedBefore = insertedBefore;
-    }
+    boolean hasBeenUpdated();
 
-    public void setInsertedAfter(PipelineTimelineEntry insertedAfter) {
-        if (this.insertedAfter != null) {
-            throw bomb("cannot change insertedAfter for: " + this + " with " + insertedAfter);
-        }
-        this.insertedAfter = insertedAfter;
-    }
+    PipelineIdentifier getPipelineLocator();
 
-    public String getPipelineName() {
-        return pipelineName;
-    }
+    Map<String, List<Revision>> revisions();
 
-    public Long getId() {
-        return id;
-    }
+    double determinedNaturalOrder();
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        PipelineTimelineEntry that = (PipelineTimelineEntry) o;
-        return id == that.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return (int) (id ^ (id >>> 32));
-    }
-
-    @Override public String toString() {
-        return "PipelineTimelineEntry{" +
-                "pipelineName='" + pipelineName + '\'' +
-                ", id=" + id +
-                ", counter=" + counter +
-                ", revisions=" + revisions +
-                ", naturalOrder=" + naturalOrder +
-                '}';
-    }
-
-    public PipelineTimelineEntry previous() {
-        return insertedAfter();
-    }
-
-    public double naturalOrder() {
-        return naturalOrder;
-    }
-
-    public void updateNaturalOrder() {
-        double calculatedOrder = calculateNaturalOrder();
-        if (this.naturalOrder > 0.0 && this.naturalOrder != calculatedOrder) {
-            bomb(String.format("Calculated natural ordering %s is not the same as the existing naturalOrder %s, for pipeline %s, with id %s", calculatedOrder, this.naturalOrder, this.pipelineName, this.id));
-        }
-        if (this.naturalOrder == 0.0 && this.naturalOrder != calculatedOrder) {
-            this.naturalOrder = calculatedOrder;
-            this.hasBeenUpdated = true;
-        }
-    }
-
-    public boolean hasBeenUpdated() {
-        return this.hasBeenUpdated;
-    }
-
-    private double calculateNaturalOrder() {
-        double previous = 0.0;
-        if (insertedAfter != null) {
-            previous = insertedAfter.naturalOrder;
-        }
-        if (insertedBefore != null) {
-            return (previous + insertedBefore.naturalOrder) / 2.0;
-        } else {
-            return previous + 1.0;
-        }
-    }
-
-    public PipelineIdentifier getPipelineLocator() {
-        return new PipelineIdentifier(pipelineName, counter, null);
-    }
-
-    public Map<String, List<Revision>> revisions() {
-        return revisions;
-    }
-
-    public static class Revision {
+    class Revision {
         public final Date date;
         public final String revision;
         public final String folder;

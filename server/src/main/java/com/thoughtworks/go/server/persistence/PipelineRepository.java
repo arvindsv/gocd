@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.thoughtworks.go.domain.PipelineTimelineEntry;
+import com.thoughtworks.go.domain.PipelineTimelineEntryFull;
 import com.thoughtworks.go.server.cache.GoCache;
 import com.thoughtworks.go.server.domain.PipelineTimeline;
 import com.thoughtworks.go.server.domain.user.PipelineSelections;
@@ -168,7 +169,7 @@ public class PipelineRepository extends HibernateDaoSupport {
                     int nextI = i + 1;
                     if (((nextI < matches.size() && id(matches.get(nextI)) != curId) ||//new pipeline instance starts in next record, so capture this one
                             nextI == matches.size())) {//this is the last record, so capture it
-                        entry = new PipelineTimelineEntry(name, curId, counter, revisions, naturalOrder);
+                        entry = new PipelineTimelineEntryFull(name, curId, counter, revisions, naturalOrder);
                         newPipelines.add(entry);
                     }
                 }

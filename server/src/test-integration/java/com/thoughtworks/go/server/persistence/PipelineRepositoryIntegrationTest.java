@@ -287,7 +287,7 @@ public class PipelineRepositoryIntegrationTest {
     }
 
     private PipelineTimelineEntry expected(long first, Map<String, List<PipelineTimelineEntry.Revision>> map, int counter) {
-        return new PipelineTimelineEntry(PIPELINE_NAME, first, counter, map);
+        return new PipelineTimelineEntryFull(PIPELINE_NAME, first, counter, map);
     }
 
     private long createPipeline(HgMaterial hgmaterial, PipelineConfig pipelineConfig, int counter, Modification... modifications) {

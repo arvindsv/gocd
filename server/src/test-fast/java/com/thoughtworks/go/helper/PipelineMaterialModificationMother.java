@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import com.thoughtworks.go.domain.PipelineTimelineEntry;
+import com.thoughtworks.go.domain.PipelineTimelineEntryFull;
 import org.joda.time.DateTime;
 
 import static com.thoughtworks.go.util.DataStructureUtils.a;
@@ -50,6 +51,6 @@ public class PipelineMaterialModificationMother {
             String fingerprint = materials.get(i);
             materialToMod.put(fingerprint, a(new PipelineTimelineEntry.Revision(datetimes.get(i).toDate(), rev, fingerprint, PipelineMaterialModificationMother.id++)));
         }
-        return new PipelineTimelineEntry(pipelineName, id, counter, materialToMod);
+        return new PipelineTimelineEntryFull(pipelineName, id, counter, materialToMod);
     }
 }

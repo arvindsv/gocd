@@ -21,10 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeSet;
 
-import com.thoughtworks.go.domain.PipelineIdentifier;
-import com.thoughtworks.go.domain.PipelineTimelineEntry;
-import com.thoughtworks.go.domain.Stage;
-import com.thoughtworks.go.domain.StageIdentifier;
+import com.thoughtworks.go.domain.*;
 import com.thoughtworks.go.helper.StageMother;
 import com.thoughtworks.go.server.cache.GoCache;
 import com.thoughtworks.go.server.ui.ViewCacheKey;
@@ -58,9 +55,9 @@ public class FailedBuildHistoryCacheSweeperTest {
     public void setUp() {
         HashMap<String, List<PipelineTimelineEntry.Revision>> modificationTimes = new HashMap<>();
         modificationTimes.put("hg", a(new PipelineTimelineEntry.Revision(new Date(), "123", "hg", 10)));
-        newlyAddedEntry = new PipelineTimelineEntry("cruise", 100, 10, modificationTimes, 5.0);
-        entryBeforeNew = new PipelineTimelineEntry("cruise", 98, 9, modificationTimes, 4.0);
-        entryAfterNew = new PipelineTimelineEntry("cruise", 99, 11, modificationTimes, 6.0);
+        newlyAddedEntry = new PipelineTimelineEntryFull("cruise", 100, 10, modificationTimes, 5.0);
+        entryBeforeNew = new PipelineTimelineEntryFull("cruise", 98, 9, modificationTimes, 4.0);
+        entryAfterNew = new PipelineTimelineEntryFull("cruise", 99, 11, modificationTimes, 6.0);
         timeline = new TreeSet<>();
         timeline.add(entryBeforeNew);
         timeline.add(entryAfterNew);

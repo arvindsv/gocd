@@ -355,8 +355,8 @@ public class PipelineHistoryServiceTest {
                 new StageInstanceModel("stage1", "3", StageResult.Failed, new StageIdentifier()),
                 new StageInstanceModel("stage2", "2", StageResult.Passed, new StageIdentifier())));
 
-        when(pipelineTimeline.runBefore(2, new CaseInsensitiveString("pipeline1"))).thenReturn(new PipelineTimelineEntry("pipeline1", 1, 9, new HashMap<>()));
-        when(pipelineTimeline.runBefore(1, new CaseInsensitiveString("pipeline1"))).thenReturn(new PipelineTimelineEntry("pipeline1", 3, 11, new HashMap<>()));
+        when(pipelineTimeline.runBefore(2, new CaseInsensitiveString("pipeline1"))).thenReturn(new PipelineTimelineEntryFull("pipeline1", 1, 9, new HashMap<>()));
+        when(pipelineTimeline.runBefore(1, new CaseInsensitiveString("pipeline1"))).thenReturn(new PipelineTimelineEntryFull("pipeline1", 3, 11, new HashMap<>()));
 
         stubPermisssionsForActivePipeline(foo, cruiseConfig, "pipeline1", true, true);
         when(goConfigService.hasPipelineNamed(new CaseInsensitiveString(any(String.class)))).thenReturn(true);
@@ -499,8 +499,8 @@ public class PipelineHistoryServiceTest {
 
         //2>1>3
 
-        when(pipelineTimeline.runBefore(2, new CaseInsensitiveString("pipeline1"))).thenReturn(new PipelineTimelineEntry("pipeline1", 1, 9, new HashMap<>()));
-        when(pipelineTimeline.runBefore(1, new CaseInsensitiveString("pipeline1"))).thenReturn(new PipelineTimelineEntry("pipeline1", 3, 11, new HashMap<>()));
+        when(pipelineTimeline.runBefore(2, new CaseInsensitiveString("pipeline1"))).thenReturn(new PipelineTimelineEntryFull("pipeline1", 1, 9, new HashMap<>()));
+        when(pipelineTimeline.runBefore(1, new CaseInsensitiveString("pipeline1"))).thenReturn(new PipelineTimelineEntryFull("pipeline1", 3, 11, new HashMap<>()));
 
         stubPermisssionsForActivePipeline(foo, cruiseConfig, "pipeline1", true, true);
         when(goConfigService.hasPipelineNamed(new CaseInsensitiveString(any(String.class)))).thenReturn(true);
