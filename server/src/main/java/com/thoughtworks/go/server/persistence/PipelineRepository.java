@@ -18,38 +18,33 @@ package com.thoughtworks.go.server.persistence;
 
 import com.thoughtworks.go.database.Database;
 import com.thoughtworks.go.database.QueryExtensions;
-import java.math.BigInteger;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.thoughtworks.go.domain.PipelineTimelineEntry;
+import com.thoughtworks.go.domain.PipelineTimelineEntryFlyweight;
 import com.thoughtworks.go.domain.PipelineTimelineEntryFull;
+import com.thoughtworks.go.domain.PipelineTimelineEntryLoader;
 import com.thoughtworks.go.server.cache.GoCache;
 import com.thoughtworks.go.server.domain.PipelineTimeline;
 import com.thoughtworks.go.server.domain.user.PipelineSelections;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Component;
 
+import java.math.BigInteger;
+import java.util.*;
+
 /**
  * @understands how to store and retrieve piplines from the database
  */
 @Component
-public class PipelineRepository extends HibernateDaoSupport {
+public class PipelineRepository extends HibernateDaoSupport implements PipelineTimelineEntryLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(PipelineRepository.class);
     private final QueryExtensions queryExtensions;
     private GoCache goCache;
@@ -151,26 +146,32 @@ public class PipelineRepository extends HibernateDaoSupport {
                 for (int i = 0; i < matches.size(); i++) {
                     Object[] row = matches.get(i);
                     long id = id(row);
-                    if (curId != id) {
-                        name = pipelineName(row);
-                        curId = id;
-                        counter = counter(row);
-                        revisions = new HashMap<>();
-                        naturalOrder = naturalOrder(row);
-                    }
 
-                    String fingerprint = fingerprint(row);
+                    if (i < 100) { /* Or, some condition. */
+                        if (curId != id) {
+                            name = pipelineName(row);
+                            curId = id;
+                            counter = counter(row);
+                            revisions = new HashMap<>();
+                            naturalOrder = naturalOrder(row);
+                        }
 
-                    if (!revisions.containsKey(fingerprint)) {
-                        revisions.put(fingerprint, new ArrayList<>());
-                    }
-                    revisions.get(fingerprint).add(rev(row));
+                        String fingerprint = fingerprint(row);
 
-                    int nextI = i + 1;
-                    if (((nextI < matches.size() && id(matches.get(nextI)) != curId) ||//new pipeline instance starts in next record, so capture this one
-                            nextI == matches.size())) {//this is the last record, so capture it
-                        entry = new PipelineTimelineEntryFull(name, curId, counter, revisions, naturalOrder);
-                        newPipelines.add(entry);
+                        if (!revisions.containsKey(fingerprint)) {
+                            revisions.put(fingerprint, new ArrayList<>());
+                        }
+                        revisions.get(fingerprint).add(rev(row));
+
+                        int nextI = i + 1;
+                        if (((nextI < matches.size() && id(matches.get(nextI)) != curId) ||//new pipeline instance starts in next record, so capture this one
+                                nextI == matches.size())) {//this is the last record, so capture it
+                            entry = new PipelineTimelineEntryFull(name, curId, counter, revisions, naturalOrder);
+                            newPipelines.add(entry);
+                        }
+                    } else {
+                        /* Here, we store a lightweight flyweight ... */
+                        newPipelines.add(new PipelineTimelineEntryFlyweight(PipelineRepository.this, id));
                     }
                 }
                 return newPipelines;
@@ -314,5 +315,11 @@ public class PipelineRepository extends HibernateDaoSupport {
 
     String pipelineSelectionForCookieKey(long id) {
         return (PipelineRepository.class.getName() + "_cookiePipelineSelection_" + id).intern();
+    }
+
+    @Override
+    public PipelineTimelineEntry load(int idAndOtherThingsNeededToLoad) {
+        /* TODO: Do whatever is needed. Reuse some queries from earlier, in this file. */
+        return null;
     }
 }
